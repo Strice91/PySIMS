@@ -1,0 +1,26 @@
+Ideen und Einfälle reinschreiben mit Namen dahinter. 
+Abgearbeitete Aufträge in "Abgearbeitet" mit neuem Name dahinter 
+
+
+Server:
+-ohne Argument Handle (Alex)
+-Doppelloggin (Alex)
+
+
+
+
+Client:
+
+
+
+
+
+
+
+
+
+
+
+
+
+Abgearbeitet:
