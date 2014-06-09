@@ -10,7 +10,8 @@ Server:
 
 
 Client:
-
+- Permanente TPC Verbindung zum Server herstellen (Stefan)
+- 
 
 
 
