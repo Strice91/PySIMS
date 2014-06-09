@@ -1,23 +1,26 @@
+from socket import *
+import time
 
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
- 
-import sys
-from PySide.QtCore import *
-from PySide.QtGui import *
-from PySide.QtNetwork import *
+class Con(object): 
 
-class Connect(QTcpSocket):
-    def __init__(self, parent=None):
-        super(Connect, self).__init__(parent)
-        self.PORT = 8075
-        self.IP = '192.168.178.18'
+    def __init__(self, ip, port):
+        self.s = socket(AF_INET, SOCK_STREAM)
+        self.s.connect((ip, port))
 
-    def connectToServer(self):
-    	self.connectToHost(self.IP,self.PORT)
+    def send(self, msg):
+        self.s.sendall(msg.encode())
+
+    def receive(self):
+
+        return self.s.recv(10240)
+
 
 if __name__ == '__main__':
-	c = Connect()
-	c.connectToServer()
-	c.write('USER test')
-	input()
+
+    c = Con('localhost',8075)
+    while 1:
+        msg = input()
+        c.send(msg)
+        ans = c.receive()
+        print(ans)
+        time.sleep(0.01)
