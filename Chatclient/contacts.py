@@ -6,11 +6,11 @@ class contactList():
 		self.amount = i
 		
 	def getList(self):
-		cList = []
+		cList = {}
 
 		for x in range(0,self.amount):
 			c = contact()
-			cList.append({'UID': c.UID, 'name': c.name, 'status': c.status})
+			cList[c.UID] = {'UID': c.UID, 'name': c.name, 'status': c.status}
 
 		return cList
 
@@ -41,7 +41,7 @@ class contact():
 					'Jojo', 
 					'Martin', 
 					'Daniel',
-					'SuperSepp3000')
+					'SuperSepp300')
 		return random.choice(names)
 
 

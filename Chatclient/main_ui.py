@@ -2,9 +2,11 @@ import sys
 from PySide.QtCore import *
 from PySide.QtGui import *
 from LabelExtension import *
+from chat_ui import QChatWindow
 from loginAction import *
 from contacts import contactList
 from os import path
+
 
 
 class ControllWidget(QWidget):
@@ -22,6 +24,8 @@ class ContactWidget(QWidget):
 
  
 class MainWindow(QMainWindow):
+
+    openChat = Signal(str)
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -53,8 +57,8 @@ class MainWindow(QMainWindow):
         # Create the Contactlist
         self.ContactListLayout = QVBoxLayout()
 
-        for contact in contactList:
-
+        for uid in contactList:
+            contact = contactList[uid]
             cLayout = QHBoxLayout()
 
             cLabel = QLabel(contact['name'])
@@ -66,8 +70,9 @@ class MainWindow(QMainWindow):
             cStatus.setPixmap(cStatusPixmap)
 
             cChatPixmap = QPixmap('img/user/chat.png')
-            cChat = ClickableLabel(self)
+            cChat = ClickableChat(self, uid)
             cChat.setPixmap(cChatPixmap)
+            cChat.openChat.connect(self.openChat)
 
             cGroupPixmap = QPixmap('img/user/add_group.png')
             cGroup = ClickableLabel(self)
@@ -142,6 +147,7 @@ class MainWindow(QMainWindow):
         self.setStyle()
         myContacts = contactList(20)
         self.contactList = myContacts.getList()
+        self.ChatWindows = {}
 
         self.Contacts(self.contactList)
 
@@ -212,6 +218,13 @@ class MainWindow(QMainWindow):
         layout.addStretch(1)
 
         widget.setLayout(layout)
+
+    @Slot(str)
+    def openChat(self, uid):
+        print('Open Chat with', uid)
+        self.ChatWindows[uid] = QChatWindow(self.contactList[uid])
+        self.ChatWindows[uid].show()
+
 
 if __name__ == '__main__':
 
