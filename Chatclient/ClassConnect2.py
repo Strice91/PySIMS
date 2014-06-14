@@ -22,12 +22,7 @@ class MyTCPClient(QTcpSocket):
     def slotReadData(self):
         print ("Server says:\n")
         ans = self.readAll()
-        while not ans:
-            time.sleep(1)
-            print('wait')
-        self.ans = ans
-        self.sendAns.emit(str(ans))
-        print ('fun: ',ans)
+        print (ans)
     
     @Slot()
     def sendMessage(self, msg):
