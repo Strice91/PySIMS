@@ -32,6 +32,8 @@ class MyTCPClient(QTcpSocket):
         self.write(msg)
         print ('Sent Message: ', msg)  
 
+    def parseAns(self, ans):
+        pass
 
 def main():  
     app = QApplication(sys.argv)
@@ -51,8 +53,7 @@ def main():
     #------------------------
     # Process Answer here:
     #------------------------
-
-    print('Ans: ', client.ans)
+    print('Ans:', client.ans)
            
     return app.exec_()
 if __name__ == '__main__':

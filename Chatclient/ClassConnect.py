@@ -12,7 +12,7 @@ class Con(object):
 
     def receive(self):
 
-        return self.s.recv(10240)
+        return self.s.recv(1024)
 
 
 if __name__ == '__main__':

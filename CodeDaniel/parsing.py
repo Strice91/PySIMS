@@ -10,13 +10,13 @@ def registerHandle(self, request):
     # Check if username already in DB
     self.c.execute("SELECT username FROM users WHERE username=?", (username,))
     if not self.c.fetchall() == []:
-        self.sendString("ERRUSR\r\n")
+        self.sendString("ERRUSR\n")
     else:
         # If username is free add the user to the database
         self.c.execute("INSERT INTO users (username, password) VALUES (?,?)", (username, password))
         self.db.commit()
         print("Successfully registered user",username)
-        self.sendString("OK\r\n")
+        self.sendString("OK\n")
     return True
 
 # This function implements the USER [username] and PASS [password] command
@@ -29,51 +29,52 @@ def userHandle(self, request, connections):
     self.c.execute("SELECT * FROM users WHERE username=?", (username,))
     login = self.c.fetchone()
     if login == None:
-        self.sendString("ERR\r\n")
+        self.sendString("ERR\n")
     else:
-        self.sendString("OK\r\n")
+        self.sendString("OK\n")
         # Wait for PASS [password] command
         passcommand = self.getString()
         if not "PASS" in passcommand:
-            self.sendString("LOGIN ABORTED\r\n")
+            self.sendString("LOGIN ABORTED\n")
         else:
             # Check if received password is ok
             password = passcommand.split(" ")[1].strip()
             if not password == login[2]:
-                self.sendString("WRONG PASS\r\n")
+                self.sendString("WRONG PASS\n")
             else:
                 # If password is ok, set the UID, generate SID, set User to 'online' and return OK and SID
                 self.ID = login[0]
                 for user in connections:
                     if user.online == True and user.ID == self.ID:
-                        user.sendString("CLOSING CONNECTION\r\n")
+                        user.sendString("CLOSING CONNECTION\n")
                         user.request.close()
                 self.SID = uuid.uuid4().hex
                 self.setOnline(True)
-                self.sendString("OK\r\n")
-                self.sendString("SID:"+str(self.SID)+"\r\n\r\n")
+                print("Login OK")
+                self.sendString("OK\n")
+                self.sendString("SID:"+str(self.SID)+"\n\n")
     return True
 
 # This function implements the GETLIST command
 def getListHandle(self, request):
     print("getListHandle")
-    self.sendString('LIST\r\n')
+    self.sendString('LIST\n')
     # Generate list of users, select only coloums 'userid','username' and 'status'
     self.c.execute("SELECT userid, username, status FROM users")
     # For each user send userid, username and status
     for row in self.c.fetchall():
-        self.sendString("UID:"+str(row[0])+","+row[1]+","+row[2]+"\r\n")
+        self.sendString("UID:"+str(row[0])+","+row[1]+","+row[2]+"\n")
     # Terminate list
-    self.sendString("\r\n")
+    self.sendString("\n")
 
 # This function implements the MKGRP command
 def mkgrpHandle(self):
     print("mkgrpHandle")
     userids = self.getString()
-    userids = userids.lstrip("UID:").rstrip("\r\n")
+    userids = userids.lstrip("UID:").rstrip("\n")
     userids = userids.split(',')
     sid = self.getString()
-    sid = sid.lstrip("SID:").rstrip("\r\n")
+    sid = sid.lstrip("SID:").rstrip("\n")
     self.getString()
     timestamp = int(time.time())
     self.c.execute("INSERT INTO groups (creationdate) VALUES (?)", (timestamp,))
@@ -82,30 +83,30 @@ def mkgrpHandle(self):
     for uid in userids:
         self.c.execute("INSERT INTO groupmembers (GID, UID) VALUES (?, ?)", (gid, uid))
     self.db.commit()
-    self.sendString("OK\r\n")
+    self.sendString("OK\n")
     
 def getgrpsHandle(self):
     print("getgrpsHandle")
-    sid = self.getString().lstrip("SID:").rstrip("\r\n")
+    sid = self.getString().lstrip("SID:").rstrip("\n")
     self.getString()
-    self.sendString("GRPS\r\n")
+    self.sendString("GRPS\n")
     self.c.execute("SELECT gid FROM groupmembers WHERE UID=?", (self.ID,))
     for row in self.c.fetchall():
-        self.sendString("GID:"+str(row[0])+"\r\n")
-    self.sendString("\r\n")
+        self.sendString("GID:"+str(row[0])+"\n")
+    self.sendString("\n")
 
 def getgrpmbrsHandle(self):
-    gid = self.getString().lstrip("GID:").rstrip("\r\n")
-    self.sendString("MEMBERS\r\n")
+    gid = self.getString().lstrip("GID:").rstrip("\n")
+    self.sendString("MEMBERS\n")
     self.c.execute("SELECT uid FROM groupmembers WHERE gid=?", (gid,))
     for row in self.c.fetchall():
-        self.sendString("UID:"+str(row[0])+"\r\n")
-    self.sendString("\r\n")
+        self.sendString("UID:"+str(row[0])+"\n")
+    self.sendString("\n")
     
 # This function implements the SENDMSG [UID] "[message]" command
 def sendMsgHandle(self, request, connections):
-    sid = self.getString().lstrip("SID:").rstrip("\r\n")
-    gid = self.getString().lstrip("GID:").rstrip("\r\n")
+    sid = self.getString().lstrip("SID:").rstrip("\n")
+    gid = self.getString().lstrip("GID:").rstrip("\n")
     message = self.getString()
     self.c.execute("SELECT uid FROM groupmembers WHERE gid=?", (gid,))
     targetusers = []

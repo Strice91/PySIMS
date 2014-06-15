@@ -67,15 +67,18 @@ class MainWindow(QMainWindow):
             StatusImgPath = path.join('img/user/',contact['status'] +'.png')
             cStatusPixmap = QPixmap(StatusImgPath)
             cStatus = QLabel()
+            cStatus.setToolTip(contact['status'])
             cStatus.setPixmap(cStatusPixmap)
 
             cChatPixmap = QPixmap('img/user/chat.png')
             cChat = ClickableChat(self, uid)
             cChat.setPixmap(cChatPixmap)
+            cChat.setToolTip('Chat beginnen')
             cChat.openChat.connect(self.openChat)
 
             cGroupPixmap = QPixmap('img/user/add_group.png')
             cGroup = ClickableLabel(self)
+            cGroup.setToolTip('Gruppenchat')
             cGroup.setPixmap(cGroupPixmap)
 
             cLayout.addWidget(cLabel)
