@@ -7,11 +7,22 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from LabelExtension import *
 from loginAction import *
+from ClassConnect import TcpClient
+from hashlib import md5
  
 class LoginWindow(QWidget):
    
     def __init__(self, parent=None):
         super(LoginWindow, self).__init__(parent)
+
+        self.tcp = TcpClient()
+        self.Act = LoginAction(self)
+        self.tcp.recvAns.connect(self.parseAns)
+        self.userName = ''
+        self.passhash = md5()
+        self.StatusUSER = False
+        self.StatusPASS = False
+        self.SID = ''
 
         # Adjust Window ----------------------------------------------
         # Set Title
@@ -32,11 +43,11 @@ class LoginWindow(QWidget):
         self.SignUpLabel = ClickableLabel("Registrieren")
 
 		# Create Username Input
-        self.usernameEdit = QLineEdit("Write name here")
+        self.usernameEdit = QLineEdit("test")
         self.usernameLabel = QLabel("Benutzername:")
 
         # Create Password Input
-        self.passwordEdit = QLineEdit()
+        self.passwordEdit = QLineEdit("test")
         self.passwordLabel = QLabel("Passwort:")
         # Set Password Input to not readable
         self.passwordEdit.setEchoMode(QLineEdit.Password)
@@ -71,7 +82,7 @@ class LoginWindow(QWidget):
 
         # Signals and Slots ------------------------------------------
         # Add button signal to sendLogin slot
-        self.loginBtn.clicked.connect(self.sendLogin)
+        self.loginBtn.clicked.connect(self.sendUser)
         self.loginBtn.clicked.connect(self.startMainWindow)
         # Add mouseReleaseEvent to forgotPass Slot
         self.connect(self.forgotPassLabel, SIGNAL('clicked()'),self.forgotPass)
@@ -80,15 +91,30 @@ class LoginWindow(QWidget):
 
         self.connect(self.logoLabel, SIGNAL('clicked()'),self.logoClick)  
 
-    # Send Login Data to Server
-    def sendLogin(self):
-        print ("Username: %s" % self.usernameEdit.text())
-        print ("Password: %s" % self.passwordEdit.text())
-        # Show loader animation
-        self.loader = QMovie('img/loader.gif')
-        self.logoLabel.setMovie(self.loader)
-        self.loader.start()
-        LoginAction.loginUser(self)
+    # Send Username to Server
+    def sendUser(self):
+        self.userName = self.usernameEdit.text()  
+        if self.userName:     
+            print ("Send Username: %s" % self.userName)
+
+            # Show loader animation
+            self.loader = QMovie('img/loader.gif')
+            self.logoLabel.setMovie(self.loader)
+            self.loader.start()
+
+            req = 'USER ' + self.userName
+            self.tcp.sendReq(req)
+
+    # Send Password to Server
+    def sendPass(self):
+        passwd = self.passwordEdit.text()
+        if passwd:
+            self.passhash.update(passwd.encode())
+            print ("Send Password: %s" % passwd)
+
+            req = 'PASS ' + self.passhash.hexdigest()
+            self.tcp.sendReq(req)
+
 
     # Send ForgotPass to Server
     def forgotPass(self):
@@ -106,11 +132,38 @@ class LoginWindow(QWidget):
         self.logoLabel.setPixmap(self.logo)
         LoginAction.abbortLogin(self)
 
+    @Slot(str, str)
+    def parseAns(self, lastReq, ans):
+        print ('--------LastReq: ', lastReq, ' Ans: ', ans)
+        lastCommand = lastReq.split()
+        lastAns = ans.split()
+
+        #print (lastCommand)
+        print (lastAns)
+
+        if lastAns[0] == 'USER':
+            if lastAns[1] == 'OK':
+                self.StatusUSER = True
+                self.sendPass()
+                        
+        elif lastAns[0] == 'PASS' and self.StatusUSER:
+            if lastAns[1] == 'OK':
+                self.StatusPASS = True
+
+        else:
+            print('SID:', lastAns[0])
+
+
+        print ('USER Status: ', self.StatusUSER)
+        print ('PASS Status: ', self.StatusPASS)
+        print ('SID: ', self.SID)
+
     def startMainWindow(self):
-        window = QMainWindow(self)
-        window.setAttribute(Qt.WA_DeleteOnClose)
-        window.setWindowTitle(self.tr('Hauptfenster'))
-        window.show()
+        pass
+        #window = QMainWindow(self)
+        #window.setAttribute(Qt.WA_DeleteOnClose)
+        #window.setWindowTitle(self.tr('Hauptfenster'))
+        #window.show()
  
 if __name__ == '__main__':
     # Create the Qt Application

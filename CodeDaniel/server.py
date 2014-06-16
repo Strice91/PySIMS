@@ -37,7 +37,7 @@ class User(socketserver.BaseRequestHandler):
         # Check for GETLIST command, must not be executed if user is not yet online
         elif 'GETLIST' in request:
             if self.online == False:
-                self.sendString("ERR\r\n")
+                self.sendString("AUTHENTIFICATION ERR\r\n")
                 ok = True
             else:
                 ok = parsing.getListHandle(self, request)
@@ -54,7 +54,7 @@ class User(socketserver.BaseRequestHandler):
         # Check for QUIT command
         elif request == "QUIT\r\n":
             self.setOnline(False)
-            self.sendString("OK\r\n")
+            self.sendString("QUIT OK\r\n")
             self.request.close()
             return False
         # If command not known return INVALID COMMAND

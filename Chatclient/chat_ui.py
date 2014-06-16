@@ -62,7 +62,6 @@ class QChatWindow(QWidget):
         policy.setHorizontalStretch(1)
         self.setSizePolicy(policy)
 
-
     def initUI(self):
 
         # Adjust Window ----------------------------------------------
