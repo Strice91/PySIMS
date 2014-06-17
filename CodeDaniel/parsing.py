@@ -45,7 +45,7 @@ def userHandle(self, request, connections):
             passhash = hashlib.md5()
             passhash.update(password.encode('UTF-8'))
             if not passhash.hexdigest() == login[2]:
-                self.sendString("WRONG PASS\r\n")
+                self.sendString("PASS WRONG\r\n")
             else:
                 # If password is ok, set the UID, generate SID, set User to 'online' and return OK and SID
                 self.ID = login[0]

@@ -8,7 +8,6 @@ from PySide.QtGui import *
 from LabelExtension import *
 from loginAction import *
 from ClassConnect import TcpClient
-from hashlib import md5
  
 class LoginWindow(QWidget):
    
@@ -19,7 +18,7 @@ class LoginWindow(QWidget):
         self.Act = LoginAction(self)
         self.tcp.recvAns.connect(self.parseAns)
         self.userName = ''
-        self.passhash = md5()
+        self.passwd = ''
         self.StatusUSER = False
         self.StatusPASS = False
         self.SID = ''
@@ -107,12 +106,11 @@ class LoginWindow(QWidget):
 
     # Send Password to Server
     def sendPass(self):
-        passwd = self.passwordEdit.text()
-        if passwd:
-            self.passhash.update(passwd.encode())
-            print ("Send Password: %s" % passwd)
+        self.passwd = self.passwordEdit.text()
+        if self.passwd:
+            print ("Send Password: %s" % self.passwd)
 
-            req = 'PASS ' + self.passhash.hexdigest()
+            req = 'PASS ' + self.passwd
             self.tcp.sendReq(req)
 
 
@@ -134,29 +132,40 @@ class LoginWindow(QWidget):
 
     @Slot(str, str)
     def parseAns(self, lastReq, ans):
-        print ('--------LastReq: ', lastReq, ' Ans: ', ans)
+        #print ('--------LastReq: ', lastReq, ' Ans: ', ans)
         lastCommand = lastReq.split()
         lastAns = ans.split()
 
         #print (lastCommand)
-        print (lastAns)
+        #print (lastAns)
 
+        # Answer = USER?
         if lastAns[0] == 'USER':
+            # USER is accepted
             if lastAns[1] == 'OK':
+                print ('USER accepted')
                 self.StatusUSER = True
                 self.sendPass()
-                        
+                
+            else:
+                print ('USER denied')
+
+        # Answer = PASS? and USER was allready accepted              
         elif lastAns[0] == 'PASS' and self.StatusUSER:
+            # PASS is accepted
             if lastAns[1] == 'OK':
+                print ('PASS accepted')
                 self.StatusPASS = True
+                SID = lastAns[2].split(':')
 
-        else:
-            print('SID:', lastAns[0])
+                if SID[0] == 'SID':
+                    self.SID = SID[1]
+            else:
+                print ('PASS denied')
 
-
-        print ('USER Status: ', self.StatusUSER)
-        print ('PASS Status: ', self.StatusPASS)
-        print ('SID: ', self.SID)
+        #print ('USER Status: ', self.StatusUSER)
+        #print ('PASS Status: ', self.StatusPASS)
+        #print ('SID: ', self.SID)
 
     def startMainWindow(self):
         pass
