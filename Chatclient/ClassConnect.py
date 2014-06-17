@@ -14,7 +14,7 @@ class TcpClient(QTcpSocket):
         super(TcpClient, self).__init__(parent)
 
         # Connect to the Chatserver
-        self.ip = 'localhost'
+        self.ip = '129.187.223.104'
         self.port = 8075
         self.con()
 
