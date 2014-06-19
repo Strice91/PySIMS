@@ -15,8 +15,11 @@ class User(socketserver.BaseRequestHandler):
         # It is executed until the connection is closed => endless loop
         while True:
             # Receive one string
-            userrequest = self.getString()
-            print(userrequest)
+            try:
+                userrequest = self.getString()
+            except:
+                break
+            # print(userrequest)
             # Parse string
             ok = self.parse(userrequest)
             # On error close the connection
@@ -44,11 +47,11 @@ class User(socketserver.BaseRequestHandler):
         # Check for SENDMSG command
         # Check for MKGRP command
         elif 'MKGRP' in request:
-            parsing.mkgrpHandle(self)
+            parsing.mkgrpHandle(self, request)
         elif 'GETGRPS' in request:
-            parsing.getgrpsHandle(self)
+            parsing.getgrpsHandle(self, request)
         elif 'GETGRPMBRS' in request:
-            parsing.getgrpmbrsHandle(self)
+            parsing.getgrpmbrsHandle(self, request)
         elif 'SENDMSG' in request:
             parsing.sendMsgHandle(self, request, connections)
         # Check for QUIT command
@@ -59,7 +62,13 @@ class User(socketserver.BaseRequestHandler):
             return False
         # If command not known return INVALID COMMAND
         else:
-            self.request.send(("INVALID COMMAND\r\n").encode('UTF-8'))
+            try:
+                self.request.send(("INVALID COMMAND\r\n").encode('UTF-8'))
+            except:
+                #self.setOnline(False)
+                #self.request.close()
+                print("User "+str(self.ID)+" closed connection")
+                return False
         return True
     
     # Waits for one TCP transmission and returns the string
@@ -79,6 +88,31 @@ class User(socketserver.BaseRequestHandler):
         # Set status in DB
         self.c.execute("UPDATE users SET status = ? WHERE userid=?", (self.online, self.ID))
         self.db.commit()
+        
+    def storeMsg(self, uid, gid, msg):
+        self.c.execute("INSERT into messages (UID, GID, message) VALUES (?, ?, ?)", (uid, gid, msg))
+        self.db.commit()
+        
+    def pushMsgs(self):
+        self.c.execute("SELECT ID, GID, message, pushed FROM messages WHERE UID=? AND pushed=0", (self.ID,))
+        for row in self.c.fetchall():
+            msg = "DLVMSG\r\n"
+            msg += "GID:"+str(row[1])+"\r\n"
+            msg += "UID:"+str(self.ID)+"\r\n"
+            msg += str(row[2])
+            msg += "\r\n\r\n"
+            self.sendString(msg)
+            self.c.execute("UPDATE messages SET pushed=1 WHERE ID=?", (row[0],))
+        self.db.commit()
+    
+    def deliverMsg(self, gid, uid, msg):
+        msg = "DLVMSG\r\n"
+        msg += "GID:"+str(gid)+"\r\n"
+        msg += "UID:"+str(uid)+"\r\n"
+        msg += msg
+        self.sendString(msg)
+        if self.getString() != "ACK\r\n":
+            print("Could not deliver message")
                  
     def setup(self):
         # This gets executed at creation of the class
@@ -89,6 +123,7 @@ class User(socketserver.BaseRequestHandler):
         self.c = self.db.cursor()
         # Set the user status to offline, because the user is not yet authentificated
         self.online = False
+        self.ID = None
         # Add user to the connection list
         connections.append(self)
 

@@ -8,6 +8,9 @@ from PySide.QtGui import *
 from LabelExtension import *
 from loginAction import *
 from ClassConnect import TcpClient
+from register_ui import RegisterWindow
+from main_ui import MainWindow
+import time
  
 class LoginWindow(QWidget):
    
@@ -17,11 +20,12 @@ class LoginWindow(QWidget):
         self.tcp = TcpClient()
         self.Act = LoginAction(self)
         self.tcp.recvAns.connect(self.parseAns)
-        self.userName = ''
-        self.passwd = ''
+        self.userName = None
+        self.passwd = None
         self.StatusUSER = False
         self.StatusPASS = False
-        self.SID = ''
+        self.SID = None
+        self.UID = None
 
         # Adjust Window ----------------------------------------------
         # Set Title
@@ -82,7 +86,6 @@ class LoginWindow(QWidget):
         # Signals and Slots ------------------------------------------
         # Add button signal to sendLogin slot
         self.loginBtn.clicked.connect(self.sendUser)
-        self.loginBtn.clicked.connect(self.startMainWindow)
         # Add mouseReleaseEvent to forgotPass Slot
         self.connect(self.forgotPassLabel, SIGNAL('clicked()'),self.forgotPass)
         # Add mouseReleaseEvent to register Slot
@@ -95,7 +98,7 @@ class LoginWindow(QWidget):
         self.userName = self.usernameEdit.text()  
         if self.userName:     
             print ("Send Username: %s" % self.userName)
-
+            
             # Show loader animation
             self.loader = QMovie('img/loader.gif')
             self.logoLabel.setMovie(self.loader)
@@ -113,6 +116,24 @@ class LoginWindow(QWidget):
             req = 'PASS ' + self.passwd
             self.tcp.sendReq(req)
 
+    def login(self):
+        time.sleep(1)
+
+        self.window = MainWindow(parent=self)
+        self.window.setAttribute(Qt.WA_DeleteOnClose)
+        self.window.setWindowTitle(self.tr('Hauptfenster'))
+        self.window.show()
+
+        self.close()
+
+    def wrongData(self, data):
+        self.logoLabel.setPixmap(self.logo)
+        if data == 'USER':
+            self.usernameLabel.setText("<font color=red>Benutzername:</font>")
+
+        elif data == 'PASS':
+            self.passwordLabel.setText("<font color=red>Passwort:</font>")
+
 
     # Send ForgotPass to Server
     def forgotPass(self):
@@ -121,6 +142,11 @@ class LoginWindow(QWidget):
 
     # Call register Routine
     def register(self):
+
+        self.RegWindow = RegisterWindow()
+        #RegWindow.setAttribute(Qt.WA_DeleteOnClose)
+        self.RegWindow.show()
+
         print ("Username: %s" % self.usernameEdit.text())
         LoginAction.registerUser(self)
 
@@ -134,45 +160,52 @@ class LoginWindow(QWidget):
     def parseAns(self, lastReq, ans):
         #print ('--------LastReq: ', lastReq, ' Ans: ', ans)
         lastCommand = lastReq.split()
-        lastAns = ans.split()
+        lastAns = ans.split('\r\n')
 
         #print (lastCommand)
         #print (lastAns)
 
         # Answer = USER?
-        if lastAns[0] == 'USER':
+        if lastAns[0] == 'USER OK':
             # USER is accepted
-            if lastAns[1] == 'OK':
-                print ('USER accepted')
-                self.StatusUSER = True
-                self.sendPass()
+            print ('USER accepted')
+            self.StatusUSER = True
+            self.usernameLabel.setText("<font color=black>Benutzername:</font>")
+            self.sendPass()
                 
-            else:
-                print ('USER denied')
+        elif lastAns[0] == 'USER ERR':
+            self.wrongData('USER')
+            self.StatusUSER = False
+            print ('USER denied')
 
         # Answer = PASS? and USER was allready accepted              
-        elif lastAns[0] == 'PASS' and self.StatusUSER:
+        elif lastAns[0] == 'PASS OK' and self.StatusUSER:
             # PASS is accepted
-            if lastAns[1] == 'OK':
-                print ('PASS accepted')
-                self.StatusPASS = True
-                SID = lastAns[2].split(':')
+            print ('PASS accepted')
+            self.passwordLabel.setText("<font color=black>Passwort:</font>")
+            self.StatusPASS = True
+            UID = lastAns[1].split(':')
+            SID = lastAns[2].split(':')
 
-                if SID[0] == 'SID':
-                    self.SID = SID[1]
-            else:
+            if UID[0] == 'UID':
+                self.UID = UID[1]
+
+            if SID[0] == 'SID':
+                self.SID = SID[1]
+                self.login()
+
+        elif lastAns[0] == 'PASS ERR':
+                self.wrongData('PASS')
+                self.StatusPASS = False
                 print ('PASS denied')
 
-        #print ('USER Status: ', self.StatusUSER)
-        #print ('PASS Status: ', self.StatusPASS)
-        #print ('SID: ', self.SID)
+        elif lastAns[0] == '':
+            pass
 
-    def startMainWindow(self):
-        pass
-        #window = QMainWindow(self)
-        #window.setAttribute(Qt.WA_DeleteOnClose)
-        #window.setWindowTitle(self.tr('Hauptfenster'))
-        #window.show()
+        print ('USER Status: ', self.StatusUSER)
+        print ('PASS Status: ', self.StatusPASS)
+        print ('SID: ', self.SID)
+
  
 if __name__ == '__main__':
     # Create the Qt Application

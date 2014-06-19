@@ -7,30 +7,20 @@ from loginAction import *
 from contacts import contactList
 from os import path
 
-
-
-class ControllWidget(QWidget):
-    def __init__(self):
-        super(ControllWidget, self).__init__()
-
-        pass
-
-
-class ContactWidget(QWidget):
-    def __init__(self):
-        super(ContactWidget, self).__init__()
-
-        pass
-
  
 class MainWindow(QMainWindow):
 
     openChat = Signal(str)
 
-    def __init__(self):
+    def __init__(self, parent=None):
         super(MainWindow, self).__init__()
 
+        self.parent = parent
+        self.tcp = parent.tcp
+        self.tcp.recvAns.connect(self.parseAns)
+        self.UID = parent.UID
         self.initUI()
+        
 
     def setStyle(self):
 
@@ -41,24 +31,33 @@ class MainWindow(QMainWindow):
                             }
                             """)
 
-    def Contacts(self, contactList):
+    def Contacts(self):
+
         # Create Contact Group Box
         self.ContactGroup = QGroupBox('Kontakte')
         # Create Main Layout
         layout = QVBoxLayout()
         # Create Scroll Area
-        ContactScroll = QScrollArea()
+        self.ContactScroll = QScrollArea()
         # Scroll Area Properties
-        ContactScroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        ContactScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        ContactScroll.setWidgetResizable(False)
+        self.ContactScroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.ContactScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.ContactScroll.setWidgetResizable(False)
         # Create a Container Widget for the VBoxLayout
-        ContactScrollContainer = QWidget()
+        self.ContactScrollContainer = QWidget()
         # Create the Contactlist
         self.ContactListLayout = QVBoxLayout()
+        # Add Scroll Area to Layout
+        layout.addWidget(self.ContactScroll)
+        # Add Layout to Group
+        self.ContactGroup.setLayout(layout)
+
+    def updateContacts(self, contactList):
 
         for uid in contactList:
+            
             contact = contactList[uid]
+            print(contact['status'])
             cLayout = QHBoxLayout()
 
             cLabel = QLabel(contact['name'])
@@ -89,16 +88,10 @@ class MainWindow(QMainWindow):
 
             self.ContactListLayout.addLayout(cLayout)
 
-
         # Add Contactlist to Container
-        ContactScrollContainer.setLayout(self.ContactListLayout)
+        self.ContactScrollContainer.setLayout(self.ContactListLayout)
         # Add Container to Scroll Area
-        ContactScroll.setWidget(ContactScrollContainer)
-        # Add Scroll Area to Layout
-        layout.addWidget(ContactScroll)
-        # Add Layout to Group
-        self.ContactGroup.setLayout(layout)
-
+        self.ContactScroll.setWidget(self.ContactScrollContainer) 
 
     def Profile(self):
 
@@ -112,7 +105,7 @@ class MainWindow(QMainWindow):
         ProfileInfoLayout = QVBoxLayout()
 
         # Create username Label
-        self.userNameLabel = QLabel('Franz Xaver')
+        self.userNameLabel = QLabel(self.parent.userName)
         self.userNameLabel.setProperty('labelClass', 'Username')
 
         # Create Status selector
@@ -148,11 +141,15 @@ class MainWindow(QMainWindow):
 
         self.Profile()
         self.setStyle()
-        myContacts = contactList(20)
-        self.contactList = myContacts.getList()
-        self.ChatWindows = {}
+        
 
-        self.Contacts(self.contactList)
+        myContacts = contactList(1,self.parent.userName)
+        self.contactList = myContacts.getListRandom()
+        self.ChatWindows = {}
+        self.ContactGroup = QGroupBox('Kontakte')
+        self.Contacts()
+
+        self.requestList()
 
         # Adjust Window ----------------------------------------------
         # Set Title
@@ -222,11 +219,53 @@ class MainWindow(QMainWindow):
 
         widget.setLayout(layout)
 
+    def requestList(self):
+        req = 'GETLIST'
+        self.tcp.sendReq(req)
+
+    def requestGID(self, members):
+        req = 'MKGRP\r\n'
+        req += 'UID:'
+        for userID in members:
+            if not userID == members[-1]:
+                req += userID + ','
+            else:
+                req += userID + '\r\n'
+
+        req += 'SID:' + self.parent.SID + '\r\n\r\n'
+
+        self.tcp.sendReq(req)
+
+
+    @Slot(str, str)
+    def parseAns(self, lastReq, ans):
+        ans = ans.split('\r\n')
+        print('TCP:', ans)
+
+        if ans[0] == 'USRLIST':
+            myContacts = contactList(ans[1:-2], self.parent.userName)
+            self.contactList = myContacts.getList()
+            self.updateContacts(self.contactList)
+
+        if ans[0] == 'MKGRP OK':
+            GID = ans[1].split(':')
+            if GID[0] == 'GID':
+                self.checkChatWindow(GID[1])
+                
+
+        if ans[0] == 'DLVMSG':
+            pass
+
+
     @Slot(str)
     def openChat(self, uid):
         print('Open Chat with', uid)
-        self.ChatWindows[uid] = QChatWindow(self.contactList[uid])
-        self.ChatWindows[uid].show()
+        members = [self.UID, uid] 
+        self.requestGID(members)
+
+    def checkChatWindow(self, gid):
+        self.ChatWindows[gid] = QChatWindow(gid, self)
+        self.ChatWindows[gid].show()
 
 
 if __name__ == '__main__':

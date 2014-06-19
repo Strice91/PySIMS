@@ -40,7 +40,7 @@ class Example(QtGui.QWidget):
 
         vbox = QtGui.QVBoxLayout()
         self.text = QtGui.QTextBrowser()
-        self.edit = QtGui.QLineEdit()
+        self.edit = QtGui.QTextEdit()
         vbox.addWidget(self.text)
         vbox.addWidget(self.edit)
         vbox.addLayout(hbox)
@@ -52,7 +52,7 @@ class Example(QtGui.QWidget):
         self.show()
 
     def send(self):
-        msg = self.edit.text() 
+        msg = self.edit.toPlainText() 
         self.tcp.sendReq(msg)
 
     @QtCore.Slot(str)

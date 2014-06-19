@@ -9,10 +9,16 @@ import TextTools
 
 class QChatWindow(QWidget):
 
-    def __init__(self, contact):
+    def __init__(self, gid, parent=None):
         super(QChatWindow, self).__init__()
 
-        self.contact = contact
+        self.parent = parent
+        self.tcp = parent.tcp
+        self.tcp.recvAns.connect(self.parseAns)
+        self.contact = {'UID':'10','name':'test','status':'online'}
+        self.GID = gid
+        self.SID = parent.parent.SID
+        self.UID = parent.UID
         self.initUI()
 
     def initEditForm(self):
@@ -89,8 +95,7 @@ class QChatWindow(QWidget):
         self.SendBtn.clicked.connect(self.sendMsg)
 
     def appendText(self, userName, text, time=time.time()):
-
-            self.showChat.append(TextTools.TextTools.newMsg(userName,text,time))
+        self.showChat.append(TextTools.TextTools.newMsg(userName,text,time))
 
     def sendMsg(self):
         
@@ -98,7 +103,17 @@ class QChatWindow(QWidget):
         userName = 'Ich'
 
         if text:
-            self.appendText(userName,text)
+            req = 'SENDMSG\r\n'
+            req += 'SID:' + self.SID + '\r\n'
+            req += 'GID:' + self.GID + '\r\n'
+            req += text + '\r\n\r\n'
+            print(req)
+            self.tcp.sendReq(req)
+
+            #self.appendText(userName,text)
+
+    def parseAns(self):
+        pass
 
 
 

@@ -14,7 +14,8 @@ class TcpClient(QTcpSocket):
         super(TcpClient, self).__init__(parent)
 
         # Connect to the Chatserver
-        self.ip = '129.187.223.104'
+        #self.ip = '129.187.223.104'
+        self.ip = '192.168.2.102'
         self.port = 8075
         self.con()
 
@@ -25,6 +26,7 @@ class TcpClient(QTcpSocket):
     
     def con(self):
         self.connectToHost(self.ip,self.port)
+        #print(self.conncted())
 
     @Slot()
     def slotReadData(self):
