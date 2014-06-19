@@ -43,7 +43,7 @@ class User(socketserver.BaseRequestHandler):
                 self.sendString("AUTHENTIFICATION ERR\r\n")
                 ok = True
             else:
-                ok = parsing.getListHandle(self, request)
+                ok = parsing.getListHandle(self)
         # Check for SENDMSG command
         # Check for MKGRP command
         elif 'MKGRP' in request:
@@ -113,6 +113,21 @@ class User(socketserver.BaseRequestHandler):
         self.sendString(msg)
         if self.getString() != "ACK\r\n":
             print("Could not deliver message")
+
+    def sendList(self, users):
+        usrlist = 'USRLIST\r\n'
+        # Generate list of users, select only coloums 'userid','username' and 'status'
+        self.c.execute("SELECT userid, username, status FROM users")
+        # For each user send userid, username and status
+        for row in self.c.fetchall():
+            usrlist += "UID:"+str(row[0])+","+row[1]+","+row[2]+"\r\n"
+        # Terminate list
+        usrlist += ("\r\n")
+        try:
+            for user in users:
+                user.sendString(usrlist)
+        except:
+            print("First user logged on")
                  
     def setup(self):
         # This gets executed at creation of the class

@@ -112,7 +112,7 @@ class MainWindow(QMainWindow):
         self.statusSelect = QComboBox(self)
         self.statusSelect.addItem('Online')
         self.statusSelect.addItem('Abwesend')
-        self.statusSelect.addItem('Beschäftigt')
+        self.statusSelect.addItem('Beschaeftigt')
         self.statusSelect.addItem('Offline')
 
         # Create Infotext Label
@@ -181,8 +181,8 @@ class MainWindow(QMainWindow):
         #settingsAction.triggered.connect(self.close)
 
         # Create About
-        aboutAction = QAction(QIcon('img/main/about.png'), 'Über PySIMS', self)
-        aboutAction.setStatusTip('Über PySIMS')
+        aboutAction = QAction(QIcon('img/main/about.png'), 'Ueber PySIMS', self)
+        aboutAction.setStatusTip('Ueber PySIMS')
         #settingsAction.triggered.connect(self.close)
 
         # Create Help

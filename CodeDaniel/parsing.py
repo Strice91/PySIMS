@@ -61,25 +61,14 @@ def userHandle(self, request, connections):
                 self.sendString("PASS OK\r\nUID:"+str(self.ID)+"\r\nSID:"+str(self.SID)+"\r\n\r\n")
                 print("User "+username+" logged in.")
                 self.pushMsgs()
-                self.sendList(connections)
+                otherusers = connections.remove(self)
+                self.sendList(otherusers)
     return True
 
 # This function implements the GETLIST command
-def getListHandle(self, request):
+def getListHandle(self):
     print("getListHandle")
     self.sendList([self])
-
-def sendList(self, users):
-    usrlist = 'USRLIST\r\n'
-    # Generate list of users, select only coloums 'userid','username' and 'status'
-    self.c.execute("SELECT userid, username, status FROM users")
-    # For each user send userid, username and status
-    for row in self.c.fetchall():
-        usrlist += "UID:"+str(row[0])+","+row[1]+","+row[2]+"\r\n"
-    # Terminate list
-    usrlist += ("\r\n")
-    for user in users:
-        user.sendString(usrlist)
 
 # This function implements the MKGRP command
 def mkgrpHandle(self, request):
