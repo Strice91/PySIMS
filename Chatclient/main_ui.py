@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
         self.ContactScroll.setWidgetResizable(False)
         # Create a Container Widget for the VBoxLayout
         self.ContactScrollContainer = QWidget()
+        self.ContactScroll.setMinimumSize(30,300)
         # Create the Contactlist
         self.ContactListLayout = QVBoxLayout()
         # Add Scroll Area to Layout
