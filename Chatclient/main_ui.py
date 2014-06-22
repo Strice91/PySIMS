@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
         # Set Windwo Icon
         self.setWindowIcon(QIcon('img/pysims_icon_16.png')) 
         # Set Window Position and Size
-        self.setGeometry(300, 300, 250, 600)
+        self.setGeometry(10, 50, 250, 600)
         # Show Statusbar
         self.statusBar().showMessage('Ready')
 
