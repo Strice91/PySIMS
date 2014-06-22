@@ -303,7 +303,6 @@ class MainWindow(QMainWindow):
                     UID = UID[1]
                     #print(msg)
                     self.sendAck()
-                    time.sleep(1)
                     self.checkChatWindow(GID[1], UID, msg)
                     
 

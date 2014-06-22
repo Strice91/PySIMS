@@ -1,18 +1,24 @@
-Ideen und Einfälle reinschreiben mit Namen dahinter. 
+﻿Ideen und Einfälle reinschreiben mit Namen dahinter. 
 Abgearbeitete Aufträge in "Abgearbeitet" mit neuem Name dahinter 
 
 
 Server:
 -ohne Argument Handle (Alex)
 -Doppelloggin (Alex)
-
+-MSG OK GID:XXX , Gruppen ID hinzufügen! (Daniel)
+-Bei server neustart alle auf offline setzten (Daniel)
+-Remove from Group (Daniel)
+-Add to Group (Daniel)
 
 
 
 Client:
 - Permanente TPC Verbindung zum Server herstellen (Stefan)
-- 
-
+- Alle Chatfenster schließen bei Programmende (Alex)
+- python Packer (ohne Zusatzinstallation) (Alex)
+- login logik (Alex)
+- maximale Namensregelung(Alex)
+- Bei Connection abbruch neu login (Stefan)
 
 
 
