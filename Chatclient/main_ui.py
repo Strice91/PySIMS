@@ -298,7 +298,6 @@ class MainWindow(QMainWindow):
             UID = ans[2].split(':')
             msg = ans[3]
             if GID[0] == 'GID':
-                print('new GID:', GID)
                 if UID[0] == 'UID':
                     UID = UID[1]
                     #print(msg)
@@ -313,8 +312,10 @@ class MainWindow(QMainWindow):
         self.requestGID(members)
 
     def checkChatWindow(self, gid, senderID=None, msg=None):
+
+        #print('SenderID:', senderID)
         if gid in self.ChatWindows:
-            print (ChatWindows[gid])
+            print (self.ChatWindows[gid])
         else:
             self.ChatWindows[gid] = QChatWindow(gid, senderID, msg, self)
             self.ChatWindows[gid].show()

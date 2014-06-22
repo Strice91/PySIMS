@@ -21,9 +21,9 @@ class QChatWindow(QWidget):
         self.UID = parent.UID
         self.members = []
         self.initUI()
+
         if msg:
-            now = time.time()
-            self.showChat.append(TextTools.TextTools.newMsg(senderID,msg,now))
+            self.appendText(senderID,msg)
 
     def initEditForm(self):
         
@@ -96,6 +96,8 @@ class QChatWindow(QWidget):
 
     def initUI(self):
 
+        self.requestMembers()
+
         # Adjust Window ----------------------------------------------
         self.resize(400, 300)
         self.setWindowTitle('GID: ' + self.GID)
@@ -122,16 +124,22 @@ class QChatWindow(QWidget):
 
         self.SendBtn.clicked.connect(self.sendMsg)
 
-        self.requestMembers()
+    def appendText(self, senderID, text, time=time.time()):
+        print('MSG from ID:', senderID)
+        for user in self.parent.contactList:
+            print (user)
 
-    def appendText(self, userName, text, time=time.time()):
-        self.showChat.append(TextTools.TextTools.newMsg(userName,text,time))
+        if senderID in self.parent.contactList:
+            senderName = self.parent.contactList[senderID]['name']
+        else:
+            senderName = 'Ich'
+
+        self.showChat.append(TextTools.TextTools.newMsg(senderName,text,time))
         self.TextEdit.setText('')
 
     def sendMsg(self):
         
         text = self.TextEdit.toPlainText()
-        userName = 'Ich'
 
         if text:
             req = 'SENDMSG\r\n'
@@ -141,7 +149,7 @@ class QChatWindow(QWidget):
             print(req)
             self.tcp.sendReq(req)
 
-            self.appendText(userName,text)
+            self.appendText(self.UID,text)
 
     def sendAck(self):
         #self.tcp.sendReq('ACK\r\n')
@@ -156,6 +164,15 @@ class QChatWindow(QWidget):
         print(req)
 
         self.tcp.sendReq(req)
+
+    def updateMembers(self, memberList):
+        self.members = memberList
+        title = "Chat mit: "
+        for uid in memberList:
+            if not uid == self.UID:
+                title += self.parent.contactList[uid]['name'] + " "
+        self.setWindowTitle(title)
+
 
     @Slot(str, str)
     def newMsg(self, senderID, msg):
@@ -175,11 +192,19 @@ class QChatWindow(QWidget):
             if GID[0] == 'GID':
                 if GID[1] == self.GID:
                     if UID[0] == 'UID':
-                        sender = UID[1]
+                        senderID = UID[1]
                         print('Chat:', msg)
-                        now = time.time()
-                        self.showChat.append(TextTools.TextTools.newMsg(sender,msg,now))
+                        self.appendText(senderID,msg)
                         self.sendAck()
+
+        elif ans[0] == 'MEMBERS':
+            members = []
+            for member in ans[1:]:
+                if member:
+                    m = member.split(':')
+                    if m[0] == 'UID':
+                        members.append(m[1])
+            self.updateMembers(members)
 
         #elif ans[0] == 'MSG OK'
         #    GID = ans[1].split(':')
