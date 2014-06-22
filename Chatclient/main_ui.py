@@ -12,6 +12,8 @@ class MainWindow(QMainWindow):
 
     openChat = Signal(str)
 
+    # Cunstructor of MainWindow ##############################################
+
     def __init__(self, parent=None):
         super(MainWindow, self).__init__()
 
@@ -21,6 +23,91 @@ class MainWindow(QMainWindow):
         self.UID = parent.UID
         self.initUI()
         
+    # Init Functions #########################################################
+    def initUI(self):
+
+        # Write all Stylsheets
+        self.setStyle()
+        # Init the Profile Groupbox
+        self.Profile()
+        # Init the Contro Groupbox
+        self.Control()
+        # Init the Contact Groupbox
+        self.Contacts()
+        # Request Contact List from Server
+        self.requestList()
+        # Init List of Chatwindows
+        self.ChatWindows = {}
+
+
+        # Adjust Window ------------------------------------------------------
+        # Set Title
+        self.setWindowTitle('PySIMS')
+        # Set Windwo Icon
+        self.setWindowIcon(QIcon('img/pysims_icon_16.png')) 
+        # Set Window Position and Size
+        self.setGeometry(300, 300, 250, 600)
+        # Show Statusbar
+        self.statusBar().showMessage('Ready')
+
+        # MenuBar ------------------------------------------------------------
+        # Create Exit
+        exitAction = QAction(QIcon('img/main/exit.png'), 'Beenden', self)
+        exitAction.setStatusTip('Beenden')
+        exitAction.setShortcut('Ctrl+Q')
+        exitAction.triggered.connect(self.close)
+
+        # Create Profil
+        profileAction = QAction(QIcon('img/main/profile.png'), 'Profil', self)
+        profileAction.setStatusTip('Benutzer Profil')
+        profileAction.setShortcut('Ctrl+P')
+        #profileAction.triggered.connect(self.close)
+
+        # Create Settings
+        settingsAction = QAction(QIcon('img/main/settings.png'), 'Einstellungen', self)
+        settingsAction.setStatusTip('Einstellungen')
+        settingsAction.setShortcut('Ctrl+E')
+        #settingsAction.triggered.connect(self.close)
+
+        # Create About
+        aboutAction = QAction(QIcon('img/main/about.png'), 'Ueber PySIMS', self)
+        aboutAction.setStatusTip('Ueber PySIMS')
+        #settingsAction.triggered.connect(self.close)
+
+        # Create Help
+        helpAction = QAction(QIcon('img/main/help.png'), 'Hilfe', self)
+        helpAction.setStatusTip('Hilfe')
+        #settingsAction.triggered.connect(self.close)
+
+        # Create MenuBar
+        menubar = self.menuBar()
+        # Add File Menu
+        fileMenu = menubar.addMenu('&Datei')
+        fileMenu.addAction(exitAction)
+        # Add Options Menu
+        optMenu = menubar.addMenu('&Optionen')
+        optMenu.addAction(profileAction)
+        optMenu.addAction(settingsAction)
+        # Add Help Menu
+        helpMenu = menubar.addMenu('&Hilfe')
+        helpMenu.addAction(helpAction)
+        helpMenu.addAction(aboutAction)
+
+
+        # Create layout and add widgets --------------------------------------
+
+        widget = QWidget()
+        self.setCentralWidget(widget)
+
+        # Build Main Layout, Add all Widgets
+        layout = QVBoxLayout()
+        #layout.addWidget(scroll)
+        layout.addWidget(self.ProfileGroup)
+        layout.addWidget(self.ControlGroup)
+        layout.addWidget(self.ContactGroup)
+        layout.addStretch(1)
+
+        widget.setLayout(layout)
 
     def setStyle(self):
 
@@ -52,47 +139,6 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.ContactScroll)
         # Add Layout to Group
         self.ContactGroup.setLayout(layout)
-
-    def updateContacts(self, contactList):
-
-        for uid in contactList:
-            
-            contact = contactList[uid]
-            print(contact['status'])
-            cLayout = QHBoxLayout()
-
-            cLabel = QLabel(contact['name'])
-            cLabel.setStyleSheet("QLabel {font-size: 14px}")
-
-            StatusImgPath = path.join('img/user/',contact['status'] +'.png')
-            cStatusPixmap = QPixmap(StatusImgPath)
-            cStatus = QLabel()
-            cStatus.setToolTip(contact['status'])
-            cStatus.setPixmap(cStatusPixmap)
-
-            cChatPixmap = QPixmap('img/user/chat.png')
-            cChat = ClickableChat(self, uid)
-            cChat.setPixmap(cChatPixmap)
-            cChat.setToolTip('Chat beginnen')
-            cChat.openChat.connect(self.openChat)
-
-            cGroupPixmap = QPixmap('img/user/add_group.png')
-            cGroup = ClickableLabel(self)
-            cGroup.setToolTip('Gruppenchat')
-            cGroup.setPixmap(cGroupPixmap)
-
-            cLayout.addWidget(cLabel)
-            cLayout.addStretch(1)
-            cLayout.addWidget(cStatus)
-            cLayout.addWidget(cChat)
-            cLayout.addWidget(cGroup)
-
-            self.ContactListLayout.addLayout(cLayout)
-
-        # Add Contactlist to Container
-        self.ContactScrollContainer.setLayout(self.ContactListLayout)
-        # Add Container to Scroll Area
-        self.ContactScroll.setWidget(self.ContactScrollContainer) 
 
     def Profile(self):
 
@@ -137,88 +183,55 @@ class MainWindow(QMainWindow):
         # Add to Profile Group
         self.ProfileGroup.setLayout(ProfileLayout)
 
+    def Control(self):
 
-    def initUI(self):
-
-        self.Profile()
-        self.setStyle()
-        
-
-        myContacts = contactList(1,self.parent.userName)
-        self.contactList = myContacts.getListRandom()
-        self.ChatWindows = {}
-        self.ContactGroup = QGroupBox('Kontakte')
-        self.Contacts()
-
-        self.requestList()
-
-        # Adjust Window ----------------------------------------------
-        # Set Title
-        self.setWindowTitle('PySIMS')
-        # Set Windwo Icon
-        self.setWindowIcon(QIcon('img/pysims_icon_16.png')) 
-        # Set Window Position and Size
-        self.setGeometry(300, 300, 250, 600)
-        # Show Statusbar
-        self.statusBar().showMessage('Ready')
-
-        # MenuBar ----------------------------------------------------
-        # Create Exit
-        exitAction = QAction(QIcon('img/main/exit.png'), 'Beenden', self)
-        exitAction.setStatusTip('Beenden')
-        exitAction.setShortcut('Ctrl+Q')
-        exitAction.triggered.connect(self.close)
-
-        # Create Profil
-        profileAction = QAction(QIcon('img/main/profile.png'), 'Profil', self)
-        profileAction.setStatusTip('Benutzer Profil')
-        profileAction.setShortcut('Ctrl+P')
-        #profileAction.triggered.connect(self.close)
-
-        # Create Settings
-        settingsAction = QAction(QIcon('img/main/settings.png'), 'Einstellungen', self)
-        settingsAction.setStatusTip('Einstellungen')
-        settingsAction.setShortcut('Ctrl+E')
-        #settingsAction.triggered.connect(self.close)
-
-        # Create About
-        aboutAction = QAction(QIcon('img/main/about.png'), 'Ueber PySIMS', self)
-        aboutAction.setStatusTip('Ueber PySIMS')
-        #settingsAction.triggered.connect(self.close)
-
-        # Create Help
-        helpAction = QAction(QIcon('img/main/help.png'), 'Hilfe', self)
-        helpAction.setStatusTip('Hilfe')
-        #settingsAction.triggered.connect(self.close)
-
-        # Create MenuBar
-        menubar = self.menuBar()
-        # Add File Menu
-        fileMenu = menubar.addMenu('&Datei')
-        fileMenu.addAction(exitAction)
-        # Add Options Menu
-        optMenu = menubar.addMenu('&Optionen')
-        optMenu.addAction(profileAction)
-        optMenu.addAction(settingsAction)
-        # Add Help Menu
-        helpMenu = menubar.addMenu('&Hilfe')
-        helpMenu.addAction(helpAction)
-        helpMenu.addAction(aboutAction)
+        self.ControlGroup = QGroupBox('Control')
+        # Create the Control Main Layout
+        ControlLayout = QHBoxLayout()
 
 
-        # Create layout and add widgets ------------------------------
+    # Actions and Slots ######################################################
 
-        widget = QWidget()
-        self.setCentralWidget(widget)
+    def updateContacts(self, contactList):
 
-        # Build Main Layout
-        layout = QVBoxLayout()
-        #layout.addWidget(scroll)
-        layout.addWidget(self.ProfileGroup)
-        layout.addWidget(self.ContactGroup)
-        layout.addStretch(1)
+        for uid in contactList:
+            
+            contact = contactList[uid]
+            print(contact['status'])
+            cLayout = QHBoxLayout()
 
-        widget.setLayout(layout)
+            cLabel = QLabel(contact['name'])
+            cLabel.setStyleSheet("QLabel {font-size: 14px}")
+
+            StatusImgPath = path.join('img/user/',contact['status'] +'.png')
+            cStatusPixmap = QPixmap(StatusImgPath)
+            cStatus = QLabel()
+            cStatus.setToolTip(contact['status'])
+            cStatus.setPixmap(cStatusPixmap)
+
+            cChatPixmap = QPixmap('img/user/chat.png')
+            cChat = ClickableChat(self, uid)
+            cChat.setPixmap(cChatPixmap)
+            cChat.setToolTip('Chat beginnen')
+            cChat.openChat.connect(self.openChat)
+
+            cGroupPixmap = QPixmap('img/user/add_group.png')
+            cGroup = ClickableLabel(self)
+            cGroup.setToolTip('Gruppenchat')
+            cGroup.setPixmap(cGroupPixmap)
+
+            cLayout.addWidget(cLabel)
+            cLayout.addStretch(1)
+            cLayout.addWidget(cStatus)
+            cLayout.addWidget(cChat)
+            cLayout.addWidget(cGroup)
+
+            self.ContactListLayout.addLayout(cLayout)
+
+        # Add Contactlist to Container
+        self.ContactScrollContainer.setLayout(self.ContactListLayout)
+        # Add Container to Scroll Area
+        self.ContactScroll.setWidget(self.ContactScrollContainer) 
 
     def requestList(self):
         req = 'GETLIST'
@@ -267,6 +280,8 @@ class MainWindow(QMainWindow):
     def checkChatWindow(self, gid):
         self.ChatWindows[gid] = QChatWindow(gid, self)
         self.ChatWindows[gid].show()
+
+    ##########################################################################
 
 
 if __name__ == '__main__':
