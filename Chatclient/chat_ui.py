@@ -5,6 +5,7 @@ from PySide.QtGui import *
 from LabelExtension import *
 from os import path
 import TextTools
+import chatControl
 
 
 class QChatWindow(QWidget):
@@ -84,14 +85,16 @@ class QChatWindow(QWidget):
     def initMemberControl(self):
         self.MemberControl = QHBoxLayout()
 
-        self.AddUserBtn = QPushButton()
-        self.AddUserBtn.setIcon(QIcon('img/chat/add.png'))
+        self.MemberBtn = QPushButton()
+        self.MemberBtn.setIcon(QIcon('img/chat/group.png'))
+        self.MemberBtn.setToolTip('Mitglieder des Chats auswaehlen')
+        self.MemberBtn.clicked.connect(self.openAddWindow)
 
-        self.RemoveUserBt = QPushButton()
-        self.RemoveUserBt.setIcon(QIcon('img/chat/rem.png'))
+        #self.RemoveUserBt = QPushButton()
+        #self.RemoveUserBt.setIcon(QIcon('img/chat/rem.png'))
 
-        self.MemberControl.addWidget(self.AddUserBtn)
-        self.MemberControl.addWidget(self.RemoveUserBt)
+        self.MemberControl.addWidget(self.MemberBtn)
+        #self.MemberControl.addWidget(self.RemoveUserBt)
         self.MemberControl.addStretch(1)
 
     def initUI(self):
@@ -123,6 +126,7 @@ class QChatWindow(QWidget):
         #QApplication.setStyle(QStyleFactory.create('Cleanlooks'))
 
         self.SendBtn.clicked.connect(self.sendMsg)
+        
 
     def appendText(self, senderID, text, time=time.time()):
         print('MSG from ID:', senderID)
@@ -210,8 +214,13 @@ class QChatWindow(QWidget):
         #    GID = ans[1].split(':')
         #    if GID[0] == ''
 
+    def openAddWindow(self):
+        self.addWindow = chatControl.chatAddWindow(parent = self)
+        self.addWindow.show()
+
     def closeEvent(self, ev):
         del self.parent.ChatWindows[self.GID]
+        self.addWindow.close()
         print('Chat closed!')
 
 if __name__ == '__main__':

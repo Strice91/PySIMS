@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
         # Set Windwo Icon
         self.setWindowIcon(QIcon('img/pysims_icon_16.png')) 
         # Set Window Position and Size
-        self.setGeometry(10, 50, 250, 600)
+        self.setGeometry(10, 50, 250, 500)
         # Show Statusbar
         self.statusBar().showMessage('Ready')
 
@@ -132,9 +132,10 @@ class MainWindow(QMainWindow):
         self.ContactScroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.ContactScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.ContactScroll.setWidgetResizable(False)
+        self.ContactScroll.setMinimumSize(30,300)
+
         # Create a Container Widget for the VBoxLayout
         self.ContactScrollContainer = QWidget()
-        self.ContactScroll.setMinimumSize(30,300)
         # Create the Contactlist
         self.ContactListLayout = QVBoxLayout()
         # Add Scroll Area to Layout
