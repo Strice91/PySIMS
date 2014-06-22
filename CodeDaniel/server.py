@@ -1,8 +1,8 @@
 import socketserver
 import parsing
 import sqlite3
+#import class_connections
 
-# List of all connections, consists of 'User' objects
 connections = []
 
 
@@ -17,6 +17,7 @@ class User(socketserver.BaseRequestHandler):
             # Receive one string
             try:
                 userrequest = self.getString()
+                # print(userrequest)
             except:
                 break
             # print(userrequest)
@@ -52,6 +53,8 @@ class User(socketserver.BaseRequestHandler):
             parsing.getgrpsHandle(self, request)
         elif 'GETGRPMBRS' in request:
             parsing.getgrpmbrsHandle(self, request)
+        elif 'ADDTOGRP' in request:
+            parsing.addToGrpHandle(self, request)
         elif 'SENDMSG' in request:
             parsing.sendMsgHandle(self, request, connections)
         # Check for QUIT command
@@ -73,7 +76,7 @@ class User(socketserver.BaseRequestHandler):
     
     # Waits for one TCP transmission and returns the string
     def getString(self):
-        s = self.request.recv(1024)
+        s = self.request.recv(8192)
         return s.decode('UTF-8')
 
     # Sends one string as TCP transmission
@@ -106,15 +109,19 @@ class User(socketserver.BaseRequestHandler):
         self.db.commit()
     
     def deliverMsg(self, gid, uid, msg):
-        msg = "DLVMSG\r\n"
-        msg += "GID:"+str(gid)+"\r\n"
-        msg += "UID:"+str(uid)+"\r\n"
-        msg += msg
-        self.sendString(msg)
-        if self.getString() != "ACK\r\n":
-            print("Could not deliver message")
+        print("deliverMsg")
+        message = "DLVMSG\r\n"
+        message += "GID:"+str(gid)+"\r\n"
+        message += "UID:"+str(uid)+"\r\n"
+        message += msg
+        message += "\r\n\r\n"
+        # print(message)
+        self.sendString(message)
+        #if self.getString() != "ACK\r\n":
+        #    print("Could not deliver message")
 
     def sendList(self, users):
+        print("sendList")
         usrlist = 'USRLIST\r\n'
         # Generate list of users, select only coloums 'userid','username' and 'status'
         self.c.execute("SELECT userid, username, status FROM users")
@@ -128,10 +135,26 @@ class User(socketserver.BaseRequestHandler):
                 user.sendString(usrlist)
         except:
             print("First user logged on")
+
+    def updateUserLists(self):
+        print("updateUserLists")
+        usrlist = 'USRLIST\r\n'
+        # Generate list of users, select only coloums 'userid','username' and 'status'
+        self.c.execute("SELECT userid, username, status FROM users")
+        # For each user send userid, username and status
+        for row in self.c.fetchall():
+            usrlist += "UID:"+str(row[0])+","+row[1]+","+row[2]+"\r\n"
+        # Terminate list
+        usrlist += ("\r\n")
+        try:
+            for user in connections:
+                if not user == self:
+                    user.sendString(usrlist)
+        except:
+            pass
                  
     def setup(self):
         # This gets executed at creation of the class
-        
         # Create SQLite database connection and create a cursor for the DB
         self.db = sqlite3.connect('mysims.sqlite')
         self.db.row_factory = sqlite3.Row
@@ -139,14 +162,19 @@ class User(socketserver.BaseRequestHandler):
         # Set the user status to offline, because the user is not yet authentificated
         self.online = False
         self.ID = None
+        self.WebUI = False
         # Add user to the connection list
         connections.append(self)
+        # print(connections)
 
     def finish(self):
         self.setOnline(False)
+        self.updateUserLists()
         self.db.close()
+        connections.remove(self)
 
 # Create server and bind to port 8075
+# List of all connections, consists of 'User' objects
 socketserver.ThreadingTCPServer.allow_reuse_address = True
 server = socketserver.ThreadingTCPServer(("", 8075), User)
 server.serve_forever()

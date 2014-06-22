@@ -14,8 +14,9 @@ class TcpClient(QTcpSocket):
         super(TcpClient, self).__init__(parent)
 
         # Connect to the Chatserver
-        self.ip = '129.187.223.104' # LKN Server
-        #self.ip = 'localhost' # Other Host
+        #self.ip = '129.187.223.104' # LKN Server
+        #self.ip = 'localhost' # Local Host
+        self.ip = '192.168.2.103' # Other Host
         self.port = 8075
         self.con()
 
@@ -32,7 +33,7 @@ class TcpClient(QTcpSocket):
     def slotReadData(self):
         # Read the incoming Data
         self.ans = str(self.readAll())
-        print ("Req: ", self.lastReq, "Ans: ", self.ans)
+        #print ("Req: ", self.lastReq, "Ans: ", self.ans)
         self.recvAns.emit(self.lastReq, self.ans)
         #self.lastReq = ""
     

@@ -6,11 +6,13 @@ from chat_ui import QChatWindow
 from loginAction import *
 from contacts import contactList
 from os import path
+import time
 
  
 class MainWindow(QMainWindow):
 
     openChat = Signal(str)
+    newMsg = Signal(str, str)
 
     # Cunstructor of MainWindow ##############################################
 
@@ -162,6 +164,8 @@ class MainWindow(QMainWindow):
         self.statusSelect.addItem('Beschaeftigt')
         self.statusSelect.addItem('Offline')
 
+        self.statusSelect.currentIndexChanged[int].connect(self.changeStatus)
+
         # Create Infotext Label
         self.ProfileinfoLabel = QLabel('Infotext 04.05.14')
 
@@ -194,10 +198,15 @@ class MainWindow(QMainWindow):
 
     def updateContacts(self, contactList):
 
+        self.ContactScrollContainer.deleteLater()
+        self.ContactScrollContainer = QWidget()
+        self.ContactListLayout = None
+        self.ContactListLayout = QVBoxLayout()
+
         for uid in contactList:
             
             contact = contactList[uid]
-            print(contact['status'])
+            #print(contact['status'])
             cLayout = QHBoxLayout()
 
             cLabel = QLabel(contact['name'])
@@ -250,11 +259,29 @@ class MainWindow(QMainWindow):
 
         self.tcp.sendReq(req)
 
+    def sendAck(self):
+        #self.tcp.sendReq('ACK\r\n')
+        print('ACK sent')
+
+    def changeStatus(self, status):
+
+        if status == 0:
+            # Online
+            print('New Status: Online')
+        elif status == 1:
+            # Abwesend
+            print('New Status: Abwesend')
+        elif status == 2:
+            # Beschaeftigt
+            print('New Status: Beschaeftigt')
+        elif status == 3:
+            # Offline
+            print('New Status: Offline')
 
     @Slot(str, str)
     def parseAns(self, lastReq, ans):
         ans = ans.split('\r\n')
-        print('TCP:', ans)
+        print('Main Window TCP:', ans)
 
         if ans[0] == 'USRLIST':
             myContacts = contactList(ans[1:-2], self.parent.userName)
@@ -265,21 +292,42 @@ class MainWindow(QMainWindow):
             GID = ans[1].split(':')
             if GID[0] == 'GID':
                 self.checkChatWindow(GID[1])
-                
-
+        
         if ans[0] == 'DLVMSG':
-            pass
-
+            GID = ans[1].split(':')
+            UID = ans[2].split(':')
+            msg = ans[3]
+            if GID[0] == 'GID':
+                print('new GID:', GID)
+                if UID[0] == 'UID':
+                    UID = UID[1]
+                    #print(msg)
+                    self.sendAck()
+                    time.sleep(1)
+                    self.checkChatWindow(GID[1], UID, msg)
+                    
 
     @Slot(str)
-    def openChat(self, uid):
-        print('Open Chat with', uid)
-        members = [self.UID, uid] 
+    def openChat(self, memberID):
+        print('Open Chat with', memberID)
+        members = [self.UID, memberID] 
         self.requestGID(members)
 
-    def checkChatWindow(self, gid):
-        self.ChatWindows[gid] = QChatWindow(gid, self)
-        self.ChatWindows[gid].show()
+    def checkChatWindow(self, gid, senderID=None, msg=None):
+        if gid in self.ChatWindows:
+            print (ChatWindows[gid])
+        else:
+            self.ChatWindows[gid] = QChatWindow(gid, senderID, msg, self)
+            self.ChatWindows[gid].show()
+
+    def closeEvent(self, ev):
+
+        gids = []
+        for gid in self.ChatWindows:
+            gids.append(gid)
+
+        for gid in gids:
+            self.ChatWindows[gid].close() 
 
     ##########################################################################
 

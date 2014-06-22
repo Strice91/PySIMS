@@ -9,7 +9,7 @@ import TextTools
 
 class QChatWindow(QWidget):
 
-    def __init__(self, gid, parent=None):
+    def __init__(self, gid, senderID=None, msg=None, parent=None):
         super(QChatWindow, self).__init__()
 
         self.parent = parent
@@ -19,7 +19,11 @@ class QChatWindow(QWidget):
         self.GID = gid
         self.SID = parent.parent.SID
         self.UID = parent.UID
+        self.members = []
         self.initUI()
+        if msg:
+            now = time.time()
+            self.showChat.append(TextTools.TextTools.newMsg(senderID,msg,now))
 
     def initEditForm(self):
         
@@ -38,7 +42,7 @@ class QChatWindow(QWidget):
         # Send Buttoen
         self.SendBtn = QPushButton()
         self.SendBtn.setIcon(QIcon('img/chat/send.png'))
-        self.SendBtn.setShortcut('Return')
+        self.SendBtn.setShortcut('Ctrl+Return')
         #self.SendBtn.setIconSize(QSize(20,20))
 
         # Emoticons Button
@@ -60,6 +64,10 @@ class QChatWindow(QWidget):
 
     def initShowChat(self):
 
+        self.showChatContainer = QWidget()
+
+        ContainerLayout = QVBoxLayout()
+
         self.showChat = QTextBrowser()
         #self.showChat.setStyleSheet("background: rgb(255,255,255); color: black")
         self.showChat.setMinimumSize(359,20)
@@ -68,24 +76,44 @@ class QChatWindow(QWidget):
         policy.setHorizontalStretch(1)
         self.setSizePolicy(policy)
 
+        ContainerLayout.addLayout(self.MemberControl)
+        ContainerLayout.addWidget(self.showChat)
+
+        self.showChatContainer.setLayout(ContainerLayout)
+
+    def initMemberControl(self):
+        self.MemberControl = QHBoxLayout()
+
+        self.AddUserBtn = QPushButton()
+        self.AddUserBtn.setIcon(QIcon('img/chat/add.png'))
+
+        self.RemoveUserBt = QPushButton()
+        self.RemoveUserBt.setIcon(QIcon('img/chat/rem.png'))
+
+        self.MemberControl.addWidget(self.AddUserBtn)
+        self.MemberControl.addWidget(self.RemoveUserBt)
+        self.MemberControl.addStretch(1)
+
     def initUI(self):
 
         # Adjust Window ----------------------------------------------
         self.resize(400, 300)
-        self.setWindowTitle('Chat mit ' + self.contact['name'])
+        self.setWindowTitle('GID: ' + self.GID)
         StatusImgPath = path.join('img/user/',self.contact['status'] +'.png')
         self.setWindowIcon(QIcon(StatusImgPath)) 
 
+        self.initMemberControl()
         self.initEditForm()
         self.initShowChat()
-
+        
         # Build Main Layout
         layout = QHBoxLayout(self)
         # Splitter Layout
         splitter = QSplitter(Qt.Vertical)
         splitter.setSizes([300,50])
 
-        splitter.addWidget(self.showChat)
+        #splitter.addLayout(self.Control)
+        splitter.addWidget(self.showChatContainer)
         splitter.addWidget(self.editFormContainer)
         # Add Splitter to Main Layout
         layout.addWidget(splitter)
@@ -94,8 +122,11 @@ class QChatWindow(QWidget):
 
         self.SendBtn.clicked.connect(self.sendMsg)
 
+        self.requestMembers()
+
     def appendText(self, userName, text, time=time.time()):
         self.showChat.append(TextTools.TextTools.newMsg(userName,text,time))
+        self.TextEdit.setText('')
 
     def sendMsg(self):
         
@@ -110,14 +141,53 @@ class QChatWindow(QWidget):
             print(req)
             self.tcp.sendReq(req)
 
-            #self.appendText(userName,text)
+            self.appendText(userName,text)
 
-    def parseAns(self):
+    def sendAck(self):
+        #self.tcp.sendReq('ACK\r\n')
+        print('ACK sent')
+
+    def requestMembers(self):
+        req = "GETGRPMBRS\r\n"
+        req += "GID:"
+        req += self.GID
+        req += "\r\n\r\n"
+
+        print(req)
+
+        self.tcp.sendReq(req)
+
+    @Slot(str, str)
+    def newMsg(self, senderID, msg):
         pass
 
+    @Slot(str, str)
+    def parseAns(self, lastReq, ans):
+        ans = ans.split('\r\n')
+        print('Chat Window TCP:', ans)
 
+        if ans[0] == 'DLVMSG':
+            GID = ans[1].split(':')
+            UID = ans[2].split(':')
+            msg = ans[3]
+            print('GID:', GID)
+            print('UID:', UID)
+            if GID[0] == 'GID':
+                if GID[1] == self.GID:
+                    if UID[0] == 'UID':
+                        sender = UID[1]
+                        print('Chat:', msg)
+                        now = time.time()
+                        self.showChat.append(TextTools.TextTools.newMsg(sender,msg,now))
+                        self.sendAck()
 
+        #elif ans[0] == 'MSG OK'
+        #    GID = ans[1].split(':')
+        #    if GID[0] == ''
 
+    def closeEvent(self, ev):
+        del self.parent.ChatWindows[self.GID]
+        print('Chat closed!')
 
 if __name__ == '__main__':
 

@@ -11,6 +11,7 @@ from ClassConnect import TcpClient
 from register_ui import RegisterWindow
 from main_ui import MainWindow
 import time
+
  
 class LoginWindow(QWidget):
    
@@ -46,11 +47,11 @@ class LoginWindow(QWidget):
         self.SignUpLabel = ClickableLabel("Registrieren")
 
 		# Create Username Input
-        self.usernameEdit = QLineEdit("test")
+        self.usernameEdit = QLineEdit("")
         self.usernameLabel = QLabel("Benutzername:")
 
         # Create Password Input
-        self.passwordEdit = QLineEdit("test")
+        self.passwordEdit = QLineEdit("")
         self.passwordLabel = QLabel("Passwort:")
         # Set Password Input to not readable
         self.passwordEdit.setEchoMode(QLineEdit.Password)
@@ -86,12 +87,21 @@ class LoginWindow(QWidget):
         # Signals and Slots ------------------------------------------
         # Add button signal to sendLogin slot
         self.loginBtn.clicked.connect(self.sendUser)
+        self.usernameEdit.returnPressed.connect(self.jumpFunction1)
+        self.passwordEdit.returnPressed.connect(self.jumpFunction2)
+        
         # Add mouseReleaseEvent to forgotPass Slot
         self.connect(self.forgotPassLabel, SIGNAL('clicked()'),self.forgotPass)
         # Add mouseReleaseEvent to register Slot
         self.connect(self.SignUpLabel, SIGNAL('clicked()'),self.register)
 
         self.connect(self.logoLabel, SIGNAL('clicked()'),self.logoClick)  
+
+    def jumpFunction1(self):
+        self.passwordEdit.setFocus()
+
+    def jumpFunction2(self):
+        self.sendUser()
 
     # Send Username to Server
     def sendUser(self):
@@ -143,12 +153,12 @@ class LoginWindow(QWidget):
     # Call register Routine
     def register(self):
 
-        self.RegWindow = RegisterWindow()
+        self.RegWindow = RegisterWindow(parent=self)
         #RegWindow.setAttribute(Qt.WA_DeleteOnClose)
-        self.RegWindow.show()
+        self.RegWindow.exec_()
 
         print ("Username: %s" % self.usernameEdit.text())
-        LoginAction.registerUser(self)
+        #LoginAction.registerUser(self)
 
     def logoClick(self):
         print ("Logo geklickt!")
@@ -202,9 +212,9 @@ class LoginWindow(QWidget):
         elif lastAns[0] == '':
             pass
 
-        print ('USER Status: ', self.StatusUSER)
-        print ('PASS Status: ', self.StatusPASS)
-        print ('SID: ', self.SID)
+        #print ('USER Status: ', self.StatusUSER)
+        #print ('PASS Status: ', self.StatusPASS)
+        #print ('SID: ', self.SID)
 
  
 if __name__ == '__main__':
