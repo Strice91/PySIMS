@@ -1,2 +1,3 @@
 - Unterschiedlicher GIDs trotz klick auf gleichen Kontakt.
 - Server sendet nicht Absender sondern Empfänger mit! Bitte Absender UID mitschicken.
+- Members werden in allen Chats überschrieben (Bei MEMBERS UID:XX auch die GID mitschicken)

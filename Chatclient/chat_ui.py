@@ -220,8 +220,12 @@ class QChatWindow(QWidget):
 
     def closeEvent(self, ev):
         del self.parent.ChatWindows[self.GID]
-        self.addWindow.close()
-        print('Chat closed!')
+        try:
+            self.addWindow.close()
+        except:
+            pass
+        finally:
+            print('Chat closed!')
 
 if __name__ == '__main__':
 

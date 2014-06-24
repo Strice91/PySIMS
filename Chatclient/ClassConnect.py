@@ -16,7 +16,7 @@ class TcpClient(QTcpSocket):
         # Connect to the Chatserver
         self.ip = '129.187.223.104' # LKN Server
         #self.ip = 'localhost' # Local Host
-        #self.ip = '192.168.2.103' # Other Host
+        #self.ip = '10.180.15.89' # Other Host
         self.port = 8075
         self.con()
 
