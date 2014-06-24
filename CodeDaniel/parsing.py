@@ -127,9 +127,32 @@ def getgrpmbrsHandle(self, request):
     grpmbrs += "\r\n"
     self.sendString(grpmbrs)
 
-def addToGrpHandle(self, request):
-    print("addToGrpHandle")
+def updateGrpHandle(self, request, connections):
+    print("updateGrpHandle")
     split = request.split('\r\n')
+    gid = split[1].lstrip('GID:')
+    self.c.execute("DELETE FROM groupmembers WHERE GID=?", (gid,))
+    uids = []
+    for member in split[2:]:
+        if not member == split[-1]:
+            userline = member.split(',')
+            print(userline)
+            uid = int(userline[0].lstrip('UID:'))
+            flag = userline[1].strip()  
+            if flag == "1":
+                uids.append(uid)
+                self.c.execute("INSERT INTO groupmembers (GID, UID) VALUES (?, ?)", (gid, uid))
+    self.db.commit()
+    self.sendString("UPDATEGROUP "+gid+" OK\r\n")
+    msg = "MEMBERS\r\n"
+    msg += "GID:"+gid+"\r\n"
+    for uid in uids:
+        msg += "UID:"+str(uid)+"\r\n"
+    msg += "\r\n"
+    for user in connections:
+        if user.ID in uids and user.online == True:
+            print("Send new group to user", user.ID)
+            user.sendString(msg)
     
 # This function implements the SENDMSG [UID] "[message]" command
 def sendMsgHandle(self, request, connections):
@@ -151,7 +174,7 @@ def sendMsgHandle(self, request, connections):
                 print("User online, deliver Message directly")
                 for user in connections:
                     if user.ID == row[0] and user.ID != self.ID:
-                        user.deliverMsg(gid, user.ID, message)
+                        user.deliverMsg(gid, self.ID, message)
             else:
                 if not row[0] == self.ID:
                     self.storeMsg(row[0], gid, message)
@@ -163,9 +186,10 @@ def sendMsgHandle(self, request, connections):
             else:
                 user.storeMsg(user.IDgid, message)"""
     
-    self.sendString("MSG OK\r\n")
+    self.sendString("MSG OK\r\nGID:"+gid+"\r\n\r\n")
 
 def checkForExistingGroup(self, userids):
+    print(userids)
     self.c.execute("SELECT GID, UID FROM groupmembers")
     guids = {}
     for row in self.c.fetchall():
@@ -173,17 +197,16 @@ def checkForExistingGroup(self, userids):
             guids[row['GID']] = []
 
     self.c.execute("SELECT GID, UID FROM groupmembers")
-    for key in guids.keys():
-        for row in self.c.fetchall():
-            if row['GID'] == key:
-                guids[key].append(row['UID'])
+    for row in self.c.fetchall():
+        guids[row['GID']].append(row['UID'])
 
-    # print(guids)
+    userids.sort()
 
     for group in guids.keys():
         #print(group)
         # print(userids)
         # print(guids[group])
+        guids[group].sort()
         if userids == guids[group]:
             return group
 

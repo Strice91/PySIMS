@@ -1,7 +1,6 @@
 import socketserver
 import parsing
 import sqlite3
-#import class_connections
 
 connections = []
 
@@ -53,8 +52,8 @@ class User(socketserver.BaseRequestHandler):
             parsing.getgrpsHandle(self, request)
         elif 'GETGRPMBRS' in request:
             parsing.getgrpmbrsHandle(self, request)
-        elif 'ADDTOGRP' in request:
-            parsing.addToGrpHandle(self, request)
+        elif 'UPDATEGROUP' in request:
+            parsing.updateGrpHandle(self, request, connections)
         elif 'SENDMSG' in request:
             parsing.sendMsgHandle(self, request, connections)
         # Check for QUIT command
@@ -101,7 +100,7 @@ class User(socketserver.BaseRequestHandler):
         for row in self.c.fetchall():
             msg = "DLVMSG\r\n"
             msg += "GID:"+str(row[1])+"\r\n"
-            msg += "UID:"+str(self.ID)+"\r\n"
+            msg += "UID:"+str(row['ID'])+"\r\n"
             msg += str(row[2])
             msg += "\r\n\r\n"
             self.sendString(msg)
@@ -173,8 +172,14 @@ class User(socketserver.BaseRequestHandler):
         self.db.close()
         connections.remove(self)
 
+# Set all users to offline before server start
+db = sqlite3.connect('mysims.sqlite')
+db.row_factory = sqlite3.Row
+c = db.cursor()
+c.execute("UPDATE users SET status=0 WHERE status=1")
+db.commit()
+db.close()
 # Create server and bind to port 8075
-# List of all connections, consists of 'User' objects
 socketserver.ThreadingTCPServer.allow_reuse_address = True
 server = socketserver.ThreadingTCPServer(("", 8075), User)
 server.serve_forever()
