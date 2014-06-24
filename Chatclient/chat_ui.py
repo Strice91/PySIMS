@@ -137,9 +137,10 @@ class QChatWindow(QWidget):
             senderName = self.parent.contactList[senderID]['name']
         else:
             senderName = 'Ich'
+            #self.TextEdit.setText('')
 
         self.showChat.append(TextTools.TextTools.newMsg(senderName,text,time))
-        self.TextEdit.setText('')
+        
 
     def sendMsg(self):
         

@@ -120,6 +120,7 @@ def getgrpmbrsHandle(self, request):
     print(request.split("\r\n"))
     gid = request.split("\r\n")[1].lstrip("GID:")
     grpmbrs = "MEMBERS\r\n"
+    grpmbrs += "GID:"+gid+"\r\n"
     # Get group members from DB
     self.c.execute("SELECT uid FROM groupmembers WHERE gid=?", (gid,))
     for row in self.c.fetchall():
