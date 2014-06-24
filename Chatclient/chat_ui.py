@@ -4,7 +4,7 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from LabelExtension import *
 from os import path
-import TextTools
+from TextTools import TextTools
 import chatControl
 
 
@@ -128,10 +128,15 @@ class QChatWindow(QWidget):
         self.SendBtn.clicked.connect(self.sendMsg)
         
 
-    def appendText(self, senderID, text, time=time.time()):
-        print('MSG from ID:', senderID)
-        for user in self.parent.contactList:
-            print (user)
+    def appendText(self, senderID, text, sendtime=None):
+
+        if not sendtime:
+            sendtime = time.time()
+
+        #print('MSG from ID:', senderID)
+        #print('Time:', sendtime)
+        #for user in self.parent.contactList:
+            #print (user)
 
         if senderID in self.parent.contactList:
             senderName = self.parent.contactList[senderID]['name']
@@ -139,7 +144,7 @@ class QChatWindow(QWidget):
             senderName = 'Ich'
             #self.TextEdit.setText('')
 
-        self.showChat.append(TextTools.TextTools.newMsg(senderName,text,time))
+        self.showChat.append(TextTools.newMsg(senderName,text,sendtime))
         
 
     def sendMsg(self):
@@ -203,13 +208,22 @@ class QChatWindow(QWidget):
                         self.sendAck()
 
         elif ans[0] == 'MEMBERS':
-            members = []
-            for member in ans[1:]:
-                if member:
-                    m = member.split(':')
-                    if m[0] == 'UID':
-                        members.append(m[1])
-            self.updateMembers(members)
+            GID = ans[1].split(':')
+            if GID[0] == 'GID' and GID[1] == self.GID:
+
+                members = []
+                for member in ans[1:]:
+                    if member:
+                        m = member.split(':')
+                        if m[0] == 'UID':
+                            members.append(m[1])
+                self.updateMembers(members)
+
+        elif ans[0] == 'MSG OK':
+            GID = ans[1].split(':')
+            if GID[0] == 'GID' and GID[1] == self.GID: 
+                print('Message delivered')
+                self.TextEdit.setText('')
 
         #elif ans[0] == 'MSG OK'
         #    GID = ans[1].split(':')
