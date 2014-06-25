@@ -138,11 +138,12 @@ class QChatWindow(QWidget):
         #for user in self.parent.contactList:
             #print (user)
 
-        if senderID in self.parent.contactList:
+        if senderID in self.parent.contactList and senderID != self.UID:
             senderName = self.parent.contactList[senderID]['name']
-        else:
+        elif senderID == self.UID:
             senderName = 'Ich'
-            #self.TextEdit.setText('')
+        else:
+            senderName = 'Unbekannt'
 
         self.showChat.append(TextTools.newMsg(senderName,text,sendtime))
         
@@ -156,23 +157,20 @@ class QChatWindow(QWidget):
             req += 'SID:' + self.SID + '\r\n'
             req += 'GID:' + self.GID + '\r\n'
             req += text + '\r\n\r\n'
-            print(req)
             self.tcp.sendReq(req)
 
             self.appendText(self.UID,text)
 
     def sendAck(self):
         #self.tcp.sendReq('ACK\r\n')
-        print('ACK sent')
+        #print('ACK sent')
+        pass
 
     def requestMembers(self):
         req = "GETGRPMBRS\r\n"
         req += "GID:"
         req += self.GID
         req += "\r\n\r\n"
-
-        print(req)
-
         self.tcp.sendReq(req)
 
     def updateMembers(self, memberList):
@@ -194,19 +192,21 @@ class QChatWindow(QWidget):
     def parseAns(self, lastReq, ServerAns):
         for ans in ServerAns.split('\r\n\r\n'):
             ans = ans.split('\r\n')
-            print('Chat Window TCP:', ans)
+            print('------  Chat Window Recived: -----')
+            print(ans)
+            print('----------------------------------')
 
             if ans[0] == 'DLVMSG':
                 GID = ans[1].split(':')
                 UID = ans[2].split(':')
                 msg = ans[3]
-                print('GID:', GID)
-                print('UID:', UID)
+                #print('GID:', GID)
+                #print('UID:', UID)
                 if GID[0] == 'GID':
                     if GID[1] == self.GID:
                         if UID[0] == 'UID':
                             senderID = UID[1]
-                            print('Chat:', msg)
+                            print('Display new Message')
                             self.appendText(senderID,msg)
                             self.sendAck()
 
@@ -220,6 +220,7 @@ class QChatWindow(QWidget):
                             m = member.split(':')
                             if m[0] == 'UID':
                                 members.append(m[1])
+                    print('Updating Userlist')
                     self.updateMembers(members)
 
             elif ans[0] == 'MSG OK':
@@ -227,10 +228,6 @@ class QChatWindow(QWidget):
                 if GID[0] == 'GID' and GID[1] == self.GID: 
                     print('Message delivered')
                     self.TextEdit.setText('')
-
-            #elif ans[0] == 'MSG OK'
-            #    GID = ans[1].split(':')
-            #    if GID[0] == ''
 
     def openAddWindow(self):
         self.addWindow = chatControl.chatAddWindow(parent = self)

@@ -48,7 +48,10 @@ class TcpClient(QTcpSocket):
         # Read the incoming Data
         self.ans = str(self.readAll())
         #print ("Req: ", self.lastReq, "Ans: ", self.ans)
-        print('Server says:', self.ans)
+
+        print('##########  Server says ##########')
+        print(self.ans)
+        print('##################################')
         self.recvAns.emit(self.lastReq, self.ans)
         #self.lastReq = ""
     
@@ -57,7 +60,9 @@ class TcpClient(QTcpSocket):
         # Send Data to the Server
         self.write(msg)
         self.lastReq = msg
-        print ('Sent Message: ', msg)  
+        print('###########  Send MSG ############')
+        print (msg) 
+        print('##################################') 
 
     @Slot()
     def connectionError(self, err):

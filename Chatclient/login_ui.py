@@ -107,7 +107,7 @@ class LoginWindow(QWidget):
     def sendUser(self):
         self.userName = self.usernameEdit.text()  
         if self.userName:     
-            print ("Send Username: %s" % self.userName)
+            print ("Send Username")#: %s" % self.userName)
             
             # Show loader animation
             self.loader = QMovie('img/loader.gif')
@@ -121,7 +121,7 @@ class LoginWindow(QWidget):
     def sendPass(self):
         self.passwd = self.passwordEdit.text()
         if self.passwd:
-            print ("Send Password: %s" % self.passwd)
+            print ("Send Password")#: %s" % self.passwd)
 
             req = 'PASS ' + self.passwd + '\r\n'
             self.tcp.sendReq(req)
@@ -131,7 +131,7 @@ class LoginWindow(QWidget):
 
         self.window = MainWindow(parent=self)
         self.window.setAttribute(Qt.WA_DeleteOnClose)
-        self.window.setWindowTitle(self.tr('Hauptfenster'))
+        #self.window.setWindowTitle(self.tr('Hauptfenster'))
         self.window.show()
 
         self.close()
@@ -147,7 +147,7 @@ class LoginWindow(QWidget):
 
     # Send ForgotPass to Server
     def forgotPass(self):
-        print ("Username: %s" % self.usernameEdit.text())   
+        #print ("Username: %s" % self.usernameEdit.text())   
         LoginAction.requestPass(self)
 
     # Call register Routine
@@ -157,7 +157,7 @@ class LoginWindow(QWidget):
         #RegWindow.setAttribute(Qt.WA_DeleteOnClose)
         self.RegWindow.exec_()
 
-        print ("Username: %s" % self.usernameEdit.text())
+        #print ("Username: %s" % self.usernameEdit.text())
         #LoginAction.registerUser(self)
 
     def logoClick(self):
@@ -174,7 +174,7 @@ class LoginWindow(QWidget):
         for ans in ServerAns.split('\r\n\r\n'):
             ans = ans.split('\r\n')
             #print (lastCommand)
-            print (ans)
+            #print (ans)
             
             # Answer = USER?
             if ans[0] == 'USER OK':

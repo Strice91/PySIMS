@@ -294,7 +294,9 @@ class MainWindow(QMainWindow):
     def parseAns(self, lastReq, ServerAns):
         for ans in ServerAns.split('\r\n\r\n'):
             ans = ans.split('\r\n')
-            print('Main Window TCP:', ans)
+            print('------  Main Window Recived: -----')
+            print(ans)
+            print('----------------------------------')
 
             if ans[0] == 'USRLIST':
                 myContacts = contactList(ans[1:], self.parent.userName)
@@ -328,7 +330,8 @@ class MainWindow(QMainWindow):
 
         #print('SenderID:', senderID)
         if gid in self.ChatWindows:
-            print (self.ChatWindows[gid])
+            pass
+            #print (self.ChatWindows[gid])
         else:
             self.ChatWindows[gid] = QChatWindow(gid, senderID, msg, self)
             self.ChatWindows[gid].show()
