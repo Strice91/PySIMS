@@ -233,13 +233,13 @@ class QChatWindow(QWidget):
                     self.TextEdit.setText('')
 
     def openAddWindow(self):
-        self.addWindow = chatControl.chatAddWindow(parent = self)
-        self.addWindow.show()
+        self.editWindow = chatControl.chatEditWindow(parent = self)
+        self.editWindow.show()
 
     def closeEvent(self, ev):
         del self.parent.ChatWindows[self.GID]
         try:
-            self.addWindow.close()
+            self.editWindow.close()
         except:
             pass
         finally:

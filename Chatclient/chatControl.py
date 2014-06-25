@@ -2,10 +2,10 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from LabelExtension import *
 
-class chatAddWindow(QDialog):
+class chatEditWindow(QDialog):
 
     def __init__(self, parent=None):
-        super(chatAddWindow, self).__init__()
+        super(chatEditWindow, self).__init__()
 
         self.parent = parent
         self.contactList = parent.parent.contactList
@@ -27,6 +27,9 @@ class chatAddWindow(QDialog):
 
         self.Btn = QPushButton('Aendern')
         self.Btn.clicked.connect(self.updateMembers)
+
+        self.CancelBtn = QPushButton('Abbrechen')
+        self.CancelBtn.clicked.connect(self.close)
 
         ContactScroll = QScrollArea()
         ContactScroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -66,6 +69,7 @@ class chatAddWindow(QDialog):
         layout.addWidget(text)
         layout.addWidget(ContactScroll)
         layout.addWidget(self.Btn)
+        layout.addWidget(self.CancelBtn)
 
         self.setLayout(layout)
 
@@ -84,6 +88,7 @@ class chatAddWindow(QDialog):
             statusList.append(statusStatement)
         #print(statusList)
         self.sendMemberList(statusList)
+        self.close()
 
     def sendMemberList(self, statusList):
         req = "UPDATEGROUP\r\n"

@@ -3,9 +3,9 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from LabelExtension import *
 from chat_ui import QChatWindow
-from loginAction import *
 from contacts import contactList
 from Sound import Sound
+import login_ui
 from os import path
 import time
 
@@ -21,9 +21,11 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         self.parent = parent
+
         self.tcp = parent.tcp
         self.tcp.recvAns.connect(self.parseAns)
-        self.tcp.ConError.connect(self.connectionError)
+        self.tcp.ConError.connect(self.tcpError)
+
         self.UID = parent.UID
         self.sound = Sound()
         self.initUI()
@@ -55,7 +57,7 @@ class MainWindow(QMainWindow):
         # Set Window Position and Size
         self.setGeometry(10, 50, 250, 500)
         # Show Statusbar
-        self.statusBar().showMessage('Ready')
+        self.statusBar().showMessage('Verbinung hergestellt')
 
         # MenuBar ------------------------------------------------------------
         # Create Exit
@@ -173,7 +175,7 @@ class MainWindow(QMainWindow):
         self.statusSelect.currentIndexChanged[int].connect(self.changeStatus)
 
         # Create Infotext Label
-        self.ProfileinfoLabel = QLabel('Infotext 04.05.14')
+        self.ProfileinfoLabel = QLabel('<font color=green>Verbunden</font>')
 
         # Create Profile Picture
         self.UserImgPixmap = QPixmap('img/user/userpic.png')
@@ -340,8 +342,21 @@ class MainWindow(QMainWindow):
             self.ChatWindows[gid].show()
 
     @Slot(str)
-    def connectionError(self, err):
-        print(err)
+    def tcpError(self, err):
+        if err == 'ConnectionClosed':
+            self.statusBar().showMessage('Verbinung unterbrochen!')
+            self.ProfileinfoLabel.setText('<font color=red>Verbinung unterbrochen!</font>')
+        elif err == 'ConnectionRefused':
+            self.statusBar().showMessage('Server nicht erreichbar!')
+            self.ProfileinfoLabel.setText('<font color=red>Server nicht erreichbar!</font>')
+        self.logout()
+
+    def logout(self):
+        self.parent.show()
+        #self.Log = login_ui.LoginWindow()
+        #self.Log.show()
+
+        self.close()
 
     def closeEvent(self, ev):
 

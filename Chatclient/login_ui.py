@@ -6,7 +6,6 @@ import sys
 from PySide.QtCore import *
 from PySide.QtGui import *
 from LabelExtension import *
-from loginAction import *
 from ClassConnect import TcpClient
 from register_ui import RegisterWindow
 from main_ui import MainWindow
@@ -19,8 +18,13 @@ class LoginWindow(QWidget):
         super(LoginWindow, self).__init__()
 
         self.tcp = TcpClient(ip, port)
-        self.Act = LoginAction(self)
         self.tcp.recvAns.connect(self.parseAns)
+        self.tcp.ConError.connect(self.tcpError)
+        self.tcp.connected.connect(self.tcpConnected)
+
+        self.rconTimer = QTimer(self)
+        self.rconTimer.timeout.connect(self.tryReconnect)
+
         self.userName = None
         self.passwd = None
         self.StatusUSER = False
@@ -45,6 +49,9 @@ class LoginWindow(QWidget):
 
         # Create Sign Up
         self.SignUpLabel = ClickableLabel("Registrieren")
+
+        # Create Message Label
+        self.messageLabel = QLabel()
 
 		# Create Username Input
         self.usernameEdit = QLineEdit("")
@@ -75,6 +82,7 @@ class LoginWindow(QWidget):
         # Build Main Layout
         layout = QVBoxLayout()
         layout.addLayout(hboxLogo)
+        layout.addWidget(self.messageLabel)
         layout.addWidget(self.usernameLabel)
         layout.addWidget(self.usernameEdit)
         layout.addWidget(self.passwordLabel)
@@ -133,11 +141,9 @@ class LoginWindow(QWidget):
 
 
     def login(self):
-        #time.sleep(1)
 
         self.window = MainWindow(parent=self)
         self.window.setAttribute(Qt.WA_DeleteOnClose)
-        #self.window.setWindowTitle(self.tr('Hauptfenster'))
         self.window.show()
 
         self.close()
@@ -153,8 +159,8 @@ class LoginWindow(QWidget):
 
     # Send ForgotPass to Server
     def forgotPass(self):
-        #print ("Username: %s" % self.usernameEdit.text())   
-        LoginAction.requestPass(self)
+        print ("Username: %s" % self.usernameEdit.text())   
+        pass
 
     # Call register Routine
     def register(self):
@@ -164,13 +170,11 @@ class LoginWindow(QWidget):
         self.RegWindow.exec_()
 
         #print ("Username: %s" % self.usernameEdit.text())
-        #LoginAction.registerUser(self)
 
     def logoClick(self):
         print ("Logo geklickt!")
         # Show normal Logo
         self.logoLabel.setPixmap(self.logo)
-        LoginAction.abbortLogin(self)
 
     @Slot(str, str)
     def parseAns(self, lastReq, ServerAns):
@@ -219,9 +223,25 @@ class LoginWindow(QWidget):
             elif ans[0] == '':
                 pass
 
-        #print ('USER Status: ', self.StatusUSER)
-        #print ('PASS Status: ', self.StatusPASS)
-        #print ('SID: ', self.SID)
+    def tcpError(self, err):
+        if err == 'ConnectionRefused' or err == 'ConnectionClosed':
+            self.messageLabel.setText("<font color=red>Server zur Zeit nicht erreichbar!</font>")
+            self.tcp.abort()
+            self.loginBtn.setEnabled(False)
+            self.rconTimer.start(5000)
+        print(err)
+
+    def tryReconnect(self):
+        self.rconTimer.stop()
+        self.messageLabel.setText("<font color=red>Verbinung wird aufgebaut...</font>")
+        self.tcp.con()
+
+    def tcpConnected(self):
+        self.rconTimer.stop()
+        self.messageLabel.setText('')
+        self.loginBtn.setEnabled(True)
+
+
 
  
 if __name__ == '__main__':
