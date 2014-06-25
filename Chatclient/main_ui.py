@@ -291,30 +291,31 @@ class MainWindow(QMainWindow):
             print('New Status: Offline')
 
     @Slot(str, str)
-    def parseAns(self, lastReq, ans):
-        ans = ans.split('\r\n')
-        print('Main Window TCP:', ans)
+    def parseAns(self, lastReq, ServerAns):
+        for ans in ServerAns.split('\r\n\r\n'):
+            ans = ans.split('\r\n')
+            print('Main Window TCP:', ans)
 
-        if ans[0] == 'USRLIST':
-            myContacts = contactList(ans[1:-2], self.parent.userName)
-            self.contactList = myContacts.getList()
-            self.updateContacts(self.contactList)
+            if ans[0] == 'USRLIST':
+                myContacts = contactList(ans[1:], self.parent.userName)
+                self.contactList = myContacts.getList()
+                self.updateContacts(self.contactList)
 
-        if ans[0] == 'MKGRP OK':
-            GID = ans[1].split(':')
-            if GID[0] == 'GID':
-                self.checkChatWindow(GID[1])
-        
-        if ans[0] == 'DLVMSG':
-            GID = ans[1].split(':')
-            UID = ans[2].split(':')
-            msg = ans[3]
-            if GID[0] == 'GID':
-                if UID[0] == 'UID':
-                    UID = UID[1]
-                    #print(msg)
-                    self.sendAck()
-                    self.checkChatWindow(GID[1], UID, msg)
+            if ans[0] == 'MKGRP OK':
+                GID = ans[1].split(':')
+                if GID[0] == 'GID':
+                    self.checkChatWindow(GID[1])
+            
+            if ans[0] == 'DLVMSG':
+                GID = ans[1].split(':')
+                UID = ans[2].split(':')
+                msg = ans[3]
+                if GID[0] == 'GID':
+                    if UID[0] == 'UID':
+                        UID = UID[1]
+                        #print(msg)
+                        self.sendAck()
+                        self.checkChatWindow(GID[1], UID, msg)
                     
 
     @Slot(str)

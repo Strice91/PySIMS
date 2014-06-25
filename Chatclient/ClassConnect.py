@@ -48,6 +48,7 @@ class TcpClient(QTcpSocket):
         # Read the incoming Data
         self.ans = str(self.readAll())
         #print ("Req: ", self.lastReq, "Ans: ", self.ans)
+        print('Server says:', self.ans)
         self.recvAns.emit(self.lastReq, self.ans)
         #self.lastReq = ""
     
@@ -60,8 +61,14 @@ class TcpClient(QTcpSocket):
 
     @Slot()
     def connectionError(self, err):
-        print(err)
-        self.ConError.emit('Error')
+        if err is QAbstractSocket.RemoteHostClosedError:
+            self.ConError.emit('ConnectionClosed')
+        elif err is QAbstractSocket.ConnectionRefusedError:
+            self.ConError.emit('ConnectionRefused')
+        elif err is QAbstractSocket.HostNotFoundError:
+            self.ConError.emit('HostNotFound')
+        else:
+            self.ConError.emit('UnknownNetworkError')
 
 
 if __name__ == '__main__':

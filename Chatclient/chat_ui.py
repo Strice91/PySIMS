@@ -191,45 +191,46 @@ class QChatWindow(QWidget):
         pass
 
     @Slot(str, str)
-    def parseAns(self, lastReq, ans):
-        ans = ans.split('\r\n')
-        print('Chat Window TCP:', ans)
+    def parseAns(self, lastReq, ServerAns):
+        for ans in ServerAns.split('\r\n\r\n'):
+            ans = ans.split('\r\n')
+            print('Chat Window TCP:', ans)
 
-        if ans[0] == 'DLVMSG':
-            GID = ans[1].split(':')
-            UID = ans[2].split(':')
-            msg = ans[3]
-            print('GID:', GID)
-            print('UID:', UID)
-            if GID[0] == 'GID':
-                if GID[1] == self.GID:
-                    if UID[0] == 'UID':
-                        senderID = UID[1]
-                        print('Chat:', msg)
-                        self.appendText(senderID,msg)
-                        self.sendAck()
+            if ans[0] == 'DLVMSG':
+                GID = ans[1].split(':')
+                UID = ans[2].split(':')
+                msg = ans[3]
+                print('GID:', GID)
+                print('UID:', UID)
+                if GID[0] == 'GID':
+                    if GID[1] == self.GID:
+                        if UID[0] == 'UID':
+                            senderID = UID[1]
+                            print('Chat:', msg)
+                            self.appendText(senderID,msg)
+                            self.sendAck()
 
-        elif ans[0] == 'MEMBERS':
-            GID = ans[1].split(':')
-            if GID[0] == 'GID' and GID[1] == self.GID:
+            elif ans[0] == 'MEMBERS':
+                GID = ans[1].split(':')
+                if GID[0] == 'GID' and GID[1] == self.GID:
 
-                members = []
-                for member in ans[1:]:
-                    if member:
-                        m = member.split(':')
-                        if m[0] == 'UID':
-                            members.append(m[1])
-                self.updateMembers(members)
+                    members = []
+                    for member in ans[1:]:
+                        if member:
+                            m = member.split(':')
+                            if m[0] == 'UID':
+                                members.append(m[1])
+                    self.updateMembers(members)
 
-        elif ans[0] == 'MSG OK':
-            GID = ans[1].split(':')
-            if GID[0] == 'GID' and GID[1] == self.GID: 
-                print('Message delivered')
-                self.TextEdit.setText('')
+            elif ans[0] == 'MSG OK':
+                GID = ans[1].split(':')
+                if GID[0] == 'GID' and GID[1] == self.GID: 
+                    print('Message delivered')
+                    self.TextEdit.setText('')
 
-        #elif ans[0] == 'MSG OK'
-        #    GID = ans[1].split(':')
-        #    if GID[0] == ''
+            #elif ans[0] == 'MSG OK'
+            #    GID = ans[1].split(':')
+            #    if GID[0] == ''
 
     def openAddWindow(self):
         self.addWindow = chatControl.chatAddWindow(parent = self)

@@ -114,7 +114,7 @@ class LoginWindow(QWidget):
             self.logoLabel.setMovie(self.loader)
             self.loader.start()
 
-            req = 'USER ' + self.userName
+            req = 'USER ' + self.userName + '\r\n'
             self.tcp.sendReq(req)
 
     # Send Password to Server
@@ -123,7 +123,7 @@ class LoginWindow(QWidget):
         if self.passwd:
             print ("Send Password: %s" % self.passwd)
 
-            req = 'PASS ' + self.passwd
+            req = 'PASS ' + self.passwd + '\r\n'
             self.tcp.sendReq(req)
 
     def login(self):
@@ -167,50 +167,51 @@ class LoginWindow(QWidget):
         LoginAction.abbortLogin(self)
 
     @Slot(str, str)
-    def parseAns(self, lastReq, ans):
+    def parseAns(self, lastReq, ServerAns):
         #print ('--------LastReq: ', lastReq, ' Ans: ', ans)
         lastCommand = lastReq.split()
-        lastAns = ans.split('\r\n')
 
-        #print (lastCommand)
-        #print (lastAns)
-
-        # Answer = USER?
-        if lastAns[0] == 'USER OK':
-            # USER is accepted
-            print ('USER accepted')
-            self.StatusUSER = True
-            self.usernameLabel.setText("<font color=black>Benutzername:</font>")
-            self.sendPass()
+        for ans in ServerAns.split('\r\n\r\n'):
+            ans = ans.split('\r\n')
+            #print (lastCommand)
+            print (ans)
+            
+            # Answer = USER?
+            if ans[0] == 'USER OK':
+                # USER is accepted
+                print ('USER accepted')
+                self.StatusUSER = True
+                self.usernameLabel.setText("<font color=black>Benutzername:</font>")
+                self.sendPass()
                 
-        elif lastAns[0] == 'USER ERR':
-            self.wrongData('USER')
-            self.StatusUSER = False
-            print ('USER denied')
+            elif ans[0] == 'USER ERR':
+                self.wrongData('USER')
+                self.StatusUSER = False
+                print ('USER denied')
 
-        # Answer = PASS? and USER was allready accepted              
-        elif lastAns[0] == 'PASS OK' and self.StatusUSER:
-            # PASS is accepted
-            print ('PASS accepted')
-            self.passwordLabel.setText("<font color=black>Passwort:</font>")
-            self.StatusPASS = True
-            UID = lastAns[1].split(':')
-            SID = lastAns[2].split(':')
+            # Answer = PASS? and USER was allready accepted              
+            elif ans[0] == 'PASS OK' and self.StatusUSER:
+                # PASS is accepted
+                print ('PASS accepted')
+                self.passwordLabel.setText("<font color=black>Passwort:</font>")
+                self.StatusPASS = True
+                UID = ans[1].split(':')
+                SID = ans[2].split(':')
 
-            if UID[0] == 'UID':
-                self.UID = UID[1]
+                if UID[0] == 'UID':
+                    self.UID = UID[1]
 
-            if SID[0] == 'SID':
-                self.SID = SID[1]
-                self.login()
+                if SID[0] == 'SID':
+                    self.SID = SID[1]
+                    self.login()
 
-        elif lastAns[0] == 'PASS ERR':
+            elif ans[0] == 'PASS ERR':
                 self.wrongData('PASS')
                 self.StatusPASS = False
                 print ('PASS denied')
 
-        elif lastAns[0] == '':
-            pass
+            elif ans[0] == '':
+                pass
 
         #print ('USER Status: ', self.StatusUSER)
         #print ('PASS Status: ', self.StatusPASS)
