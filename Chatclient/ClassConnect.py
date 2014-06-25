@@ -27,6 +27,8 @@ class TcpClient(QTcpSocket):
         else:
             self.port = port
 
+        print('IP:', self.ip)
+        print('PORT:', self.port)
         # Connect to the Chatserver
         self.con()
 
@@ -52,7 +54,7 @@ class TcpClient(QTcpSocket):
         # Send Data to the Server
         self.write(msg)
         self.lastReq = msg
-        #print ('Sent Message: ', msg)  
+        print ('Sent Message: ', msg)  
 
 
 if __name__ == '__main__':

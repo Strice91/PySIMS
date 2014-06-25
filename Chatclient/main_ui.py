@@ -37,7 +37,9 @@ class MainWindow(QMainWindow):
         # Init the Contact Groupbox
         self.Contacts()
         # Request Contact List from Server
-        self.requestList()
+        #self.requestList()
+        # Requste Stored Messages from Server
+        self.requestMsg()
         # Init List of Chatwindows
         self.ChatWindows = {}
 
@@ -247,6 +249,10 @@ class MainWindow(QMainWindow):
         req = 'GETLIST'
         self.tcp.sendReq(req)
 
+    def requestMsg(self):
+        req = 'PULLMSGS'
+        self.tcp.sendReq(req)
+
     def requestGID(self, members):
         req = 'MKGRP\r\n'
         req += 'UID:'
@@ -262,7 +268,8 @@ class MainWindow(QMainWindow):
 
     def sendAck(self):
         #self.tcp.sendReq('ACK\r\n')
-        print('ACK sent')
+        #print('ACK sent')
+        pass
 
     def changeStatus(self, status):
 
