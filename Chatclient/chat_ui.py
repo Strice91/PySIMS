@@ -6,6 +6,7 @@ from LabelExtension import *
 from os import path
 from TextTools import TextTools
 import chatControl
+from Sound import Sound
 
 
 class QChatWindow(QWidget):
@@ -21,6 +22,7 @@ class QChatWindow(QWidget):
         self.SID = parent.parent.SID
         self.UID = parent.UID
         self.members = []
+        self.sound = Sound()
         self.initUI()
 
         if msg:
@@ -209,6 +211,7 @@ class QChatWindow(QWidget):
                             print('Display new Message')
                             self.appendText(senderID,msg)
                             self.sendAck()
+                            self.sound.newMsg()
 
             elif ans[0] == 'MEMBERS':
                 GID = ans[1].split(':')

@@ -47,19 +47,21 @@ class TcpClient(QTcpSocket):
     def slotReadData(self):
         # Read the incoming Data
         self.ans = str(self.readAll())
-        #print ("Req: ", self.lastReq, "Ans: ", self.ans)
 
+        # Print the recived Data
         print('##########  Server says ##########')
         print(self.ans)
         print('##################################')
+
+        # Send Signal to the Windows
         self.recvAns.emit(self.lastReq, self.ans)
-        #self.lastReq = ""
     
     @Slot()
     def sendReq(self, msg):
         # Send Data to the Server
         self.write(msg)
         self.lastReq = msg
+        # Print the Sent Data
         print('###########  Send MSG ############')
         print (msg) 
         print('##################################') 

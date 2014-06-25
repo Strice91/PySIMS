@@ -5,8 +5,8 @@ from LabelExtension import *
 from chat_ui import QChatWindow
 from loginAction import *
 from contacts import contactList
+from Sound import Sound
 from os import path
-from operator import itemgetter
 import time
 
  
@@ -25,6 +25,7 @@ class MainWindow(QMainWindow):
         self.tcp.recvAns.connect(self.parseAns)
         self.tcp.ConError.connect(self.connectionError)
         self.UID = parent.UID
+        self.sound = Sound()
         self.initUI()
         
     # Init Functions #########################################################
@@ -318,6 +319,8 @@ class MainWindow(QMainWindow):
                         #print(msg)
                         self.sendAck()
                         self.checkChatWindow(GID[1], UID, msg)
+                        self.sound.newWindow()
+
                     
 
     @Slot(str)

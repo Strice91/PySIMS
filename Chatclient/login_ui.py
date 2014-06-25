@@ -105,8 +105,9 @@ class LoginWindow(QWidget):
 
     # Send Username to Server
     def sendUser(self):
-        self.userName = self.usernameEdit.text()  
-        if self.userName:     
+        self.userName = self.usernameEdit.text()
+        self.passwd = self.passwordEdit.text()
+        if self.userName and self.passwd:     
             print ("Send Username")#: %s" % self.userName)
             
             # Show loader animation
@@ -116,6 +117,10 @@ class LoginWindow(QWidget):
 
             req = 'USER ' + self.userName + '\r\n'
             self.tcp.sendReq(req)
+        elif not self.userName:
+            self.wrongData('USER')
+        elif not self.passwd: 
+            self.wrongData('PASS')
 
     # Send Password to Server
     def sendPass(self):
@@ -126,8 +131,9 @@ class LoginWindow(QWidget):
             req = 'PASS ' + self.passwd + '\r\n'
             self.tcp.sendReq(req)
 
+
     def login(self):
-        time.sleep(1)
+        #time.sleep(1)
 
         self.window = MainWindow(parent=self)
         self.window.setAttribute(Qt.WA_DeleteOnClose)
