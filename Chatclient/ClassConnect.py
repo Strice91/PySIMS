@@ -10,14 +10,24 @@ class TcpClient(QTcpSocket):
   
     recvAns = Signal(str, str) 
 
-    def __init__(self, ip='localhost', port=8075, parent=None):
+    def __init__(self, ip, port, parent=None):
         super(TcpClient, self).__init__(parent)
 
+        if not ip:
+            # Select Default IP
+            self.ip = '129.187.223.104' # LKN Server
+            #self.ip = 'localhost' # Local Host
+            #self.ip = '10.180.15.89' # Other Host
+        else:
+            self.ip = ip
+
+        if not port:
+            # Select Default Port
+            self.port = 8075
+        else:
+            self.port = port
+
         # Connect to the Chatserver
-        self.ip = '129.187.223.104' # LKN Server
-        #self.ip = 'localhost' # Local Host
-        #self.ip = '10.180.15.89' # Other Host
-        self.port = 8075
         self.con()
 
         # Connect the ReadyRead Signal to the Read Function

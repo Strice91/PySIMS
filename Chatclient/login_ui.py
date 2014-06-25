@@ -15,10 +15,10 @@ import time
  
 class LoginWindow(QWidget):
    
-    def __init__(self, parent=None):
-        super(LoginWindow, self).__init__(parent)
+    def __init__(self, ip=None, port=None, parent=None):
+        super(LoginWindow, self).__init__()
 
-        self.tcp = TcpClient()
+        self.tcp = TcpClient(ip, port)
         self.Act = LoginAction(self)
         self.tcp.recvAns.connect(self.parseAns)
         self.userName = None
