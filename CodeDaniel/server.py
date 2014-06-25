@@ -56,6 +56,8 @@ class User(socketserver.BaseRequestHandler):
             parsing.updateGrpHandle(self, request, connections)
         elif 'SENDMSG' in request:
             parsing.sendMsgHandle(self, request, connections)
+        elif 'PULLMSGS' in request:
+            parsing.pullMsgsHandle(self)
         # Check for QUIT command
         elif request == "QUIT\r\n":
             self.setOnline(False)
@@ -65,7 +67,7 @@ class User(socketserver.BaseRequestHandler):
         # If command not known return INVALID COMMAND
         else:
             try:
-                self.request.send(("INVALID COMMAND\r\n").encode('UTF-8'))
+                self.sendString("INVALID COMMAND\r\n")
             except:
                 #self.setOnline(False)
                 #self.request.close()
@@ -145,10 +147,10 @@ class User(socketserver.BaseRequestHandler):
             usrlist += "UID:"+str(row[0])+","+row[1]+","+row[2]+"\r\n"
         # Terminate list
         usrlist += ("\r\n")
+        print(connections)
         try:
             for user in connections:
-                if not user == self:
-                    user.sendString(usrlist)
+                user.sendString(usrlist)
         except:
             pass
                  

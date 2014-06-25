@@ -183,6 +183,8 @@ class QChatWindow(QWidget):
                 title += self.parent.contactList[uid]['name'] + " "
         self.setWindowTitle(title)
 
+    def lostCon(self):
+        print('Hilfe')
 
     @Slot(str, str)
     def newMsg(self, senderID, msg):

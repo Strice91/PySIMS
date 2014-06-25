@@ -65,7 +65,6 @@ def userHandle(userobject, request, users):
                 userobject.c.execute("UPDATE users SET SID=? WHERE userid=?", (userobject.SID, userobject.ID))
                 userobject.db.commit()
                 print("User "+username+" logged in.")
-                userobject.pushMsgs()
                 userobject.updateUserLists()
     return True
 
@@ -73,6 +72,9 @@ def userHandle(userobject, request, users):
 def getListHandle(self):
     print("getListHandle")
     self.sendList([self])
+
+def pullMsgsHandle(self):
+    self.pushMsgs()
 
 # This function implements the MKGRP command
 def mkgrpHandle(self, request):
@@ -162,7 +164,7 @@ def sendMsgHandle(self, request, connections):
     sid = split[1].lstrip("SID:")
     gid = split[2].lstrip("GID:")
     message = split[3]
-    print(message)
+    # print(message)
     self.c.execute("SELECT uid FROM groupmembers WHERE gid=?", (gid,))
     targetusers = []
     for row in self.c.fetchall():
@@ -170,14 +172,13 @@ def sendMsgHandle(self, request, connections):
         
     self.c.execute("SELECT userid, status FROM users")
     for row in self.c.fetchall():
-        if row[0] in targetusers:
-            if row[1] == "1":
-                print("User online, deliver Message directly")
+        if row['userid'] in targetusers:
+            if row['status'] == "1":
                 for user in connections:
                     if user.ID == row[0] and user.ID != self.ID:
                         user.deliverMsg(gid, self.ID, message)
             else:
-                if not row[0] == self.ID:
+                if not row['userid'] == self.ID:
                     self.storeMsg(row[0], gid, message)
         
     """for user in connections:

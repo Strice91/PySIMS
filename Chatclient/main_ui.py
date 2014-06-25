@@ -6,6 +6,7 @@ from chat_ui import QChatWindow
 from loginAction import *
 from contacts import contactList
 from os import path
+from operator import itemgetter
 import time
 
  
@@ -22,6 +23,7 @@ class MainWindow(QMainWindow):
         self.parent = parent
         self.tcp = parent.tcp
         self.tcp.recvAns.connect(self.parseAns)
+        self.tcp.ConError.connect(self.connectionError)
         self.UID = parent.UID
         self.initUI()
         
@@ -33,7 +35,7 @@ class MainWindow(QMainWindow):
         # Init the Profile Groupbox
         self.Profile()
         # Init the Contro Groupbox
-        self.Control()
+        #self.Control()
         # Init the Contact Groupbox
         self.Contacts()
         # Request Contact List from Server
@@ -107,7 +109,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         #layout.addWidget(scroll)
         layout.addWidget(self.ProfileGroup)
-        layout.addWidget(self.ControlGroup)
+        #layout.addWidget(self.ControlGroup)
         layout.addWidget(self.ContactGroup)
         layout.addStretch(1)
 
@@ -201,15 +203,17 @@ class MainWindow(QMainWindow):
 
     def updateContacts(self, contactList):
 
+
+        sortedList = sorted(contactList.items(), key= lambda x: x[1]['name'].lower())
+
         self.ContactScrollContainer.deleteLater()
         self.ContactScrollContainer = QWidget()
         self.ContactListLayout = None
         self.ContactListLayout = QVBoxLayout()
 
-        for uid in contactList:
-            
-            contact = contactList[uid]
-            #print(contact['status'])
+        for c in sortedList:
+
+            contact = c[1]
             cLayout = QHBoxLayout()
 
             cLabel = QLabel(contact['name'])
@@ -222,7 +226,7 @@ class MainWindow(QMainWindow):
             cStatus.setPixmap(cStatusPixmap)
 
             cChatPixmap = QPixmap('img/user/chat.png')
-            cChat = ClickableChat(self, uid)
+            cChat = ClickableChat(self, contact['UID'])
             cChat.setPixmap(cChatPixmap)
             cChat.setToolTip('Chat beginnen')
             cChat.openChat.connect(self.openChat)
@@ -239,7 +243,7 @@ class MainWindow(QMainWindow):
             cLayout.addWidget(cGroup)
 
             self.ContactListLayout.addLayout(cLayout)
-
+            
         # Add Contactlist to Container
         self.ContactScrollContainer.setLayout(self.ContactListLayout)
         # Add Container to Scroll Area
@@ -327,6 +331,10 @@ class MainWindow(QMainWindow):
         else:
             self.ChatWindows[gid] = QChatWindow(gid, senderID, msg, self)
             self.ChatWindows[gid].show()
+
+    @Slot(str)
+    def connectionError(self, err):
+        print(err)
 
     def closeEvent(self, ev):
 

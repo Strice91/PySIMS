@@ -9,6 +9,7 @@ import time
 class TcpClient(QTcpSocket): 
   
     recvAns = Signal(str, str) 
+    ConError = Signal(str)
 
     def __init__(self, ip, port, parent=None):
         super(TcpClient, self).__init__(parent)
@@ -34,6 +35,7 @@ class TcpClient(QTcpSocket):
 
         # Connect the ReadyRead Signal to the Read Function
         self.readyRead.connect(self.slotReadData)
+        self.error.connect(self.connectionError)
         self.ans = ""
         self.lastReq = ""
     
@@ -55,6 +57,11 @@ class TcpClient(QTcpSocket):
         self.write(msg)
         self.lastReq = msg
         print ('Sent Message: ', msg)  
+
+    @Slot()
+    def connectionError(self, err):
+        print(err)
+        self.ConError.emit('Error')
 
 
 if __name__ == '__main__':
