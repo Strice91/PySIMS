@@ -9,6 +9,7 @@ from LabelExtension import *
 from ClassConnect import TcpClient
 from register_ui import RegisterWindow
 from main_ui import MainWindow
+from Sound import Sound
 import time
 
  
@@ -25,6 +26,8 @@ class LoginWindow(QWidget):
         self.rconTimer = QTimer(self)
         self.rconTimer.timeout.connect(self.tryReconnect)
 
+        self.sound = Sound()
+
         self.userName = None
         self.passwd = None
         self.StatusUSER = False
@@ -37,6 +40,7 @@ class LoginWindow(QWidget):
         self.setWindowTitle('PySIMS')
         # Set Windwo Icon
         self.setWindowIcon(QIcon('img/pysims_icon_16.png')) 
+        self.setFixedSize(200,300)
 
         # Create widgets ---------------------------------------------
         # Create Logo
@@ -141,7 +145,7 @@ class LoginWindow(QWidget):
 
 
     def login(self):
-
+        self.sound.login()
         self.window = MainWindow(parent=self)
         self.window.setAttribute(Qt.WA_DeleteOnClose)
         self.window.show()
@@ -238,6 +242,7 @@ class LoginWindow(QWidget):
 
     def tcpConnected(self):
         self.rconTimer.stop()
+        self.logoLabel.setPixmap(self.logo)
         self.messageLabel.setText('')
         self.loginBtn.setEnabled(True)
 

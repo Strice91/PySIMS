@@ -4,9 +4,10 @@ from PySide.QtGui import *
 
 class Sound(object):
 	def __init__(self):
-		self.msgSound = QSound('sound/newmsg2.wav')
-		self.errorSound = QSound('sound/error2.wav')
-		self.newWin = QSound('sound/newwindow2.wav')
+		self.msgSound = QSound('sound/newMsg.wav')
+		self.errorSound = QSound('sound/error.wav')
+		self.newWin = QSound('sound/newWindow.wav')
+		self.online = QSound('sound/online.wav')
 
 	def newMsg(self):
 		self.msgSound.play()
@@ -16,6 +17,9 @@ class Sound(object):
 
 	def newWindow(self):
 		self.newWin.play()
+
+	def login(self):
+		self.online.play()
 
 if __name__ == '__main__':
 

@@ -17,7 +17,7 @@ class QChatWindow(QWidget):
         self.parent = parent
         self.tcp = parent.tcp
         self.tcp.recvAns.connect(self.parseAns)
-        self.contact = {'UID':'10','name':'test','status':'online'}
+        self.msgTimer = QTimer()
         self.GID = gid
         self.SID = parent.parent.SID
         self.UID = parent.UID
@@ -105,8 +105,9 @@ class QChatWindow(QWidget):
 
         # Adjust Window ----------------------------------------------
         self.resize(400, 300)
+        self.setFixedWidth(400)
         self.setWindowTitle('GID: ' + self.GID)
-        StatusImgPath = path.join('img/user/',self.contact['status'] +'.png')
+        StatusImgPath = path.join('img/chat/chat.png')
         self.setWindowIcon(QIcon(StatusImgPath)) 
 
         self.initMemberControl()
@@ -180,8 +181,8 @@ class QChatWindow(QWidget):
         title = "Chat mit: "
         for uid in memberList:
             if not uid == self.UID:
-                title += self.parent.contactList[uid]['name'] + " "
-        self.setWindowTitle(title)
+                title += self.parent.contactList[uid]['name'] + " | "
+        self.setWindowTitle(title[:-2])
 
     def lostCon(self):
         print('Hilfe')

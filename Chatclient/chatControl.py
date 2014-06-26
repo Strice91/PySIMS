@@ -43,18 +43,20 @@ class chatEditWindow(QDialog):
 
         self.CheckBoxList = {}
 
-        for uid in self.contactList:
+        sortedList = sorted(self.contactList.items(), key= lambda x: x[1]['name'].lower())
 
-            contact = self.contactList[uid]
+        for c in sortedList:
+
+            contact = c[1]
 
             cLayout = QHBoxLayout()
             cLabel = QLabel(contact['name'])
 
             cCheck = QCheckBox()
-            if uid in self.members:
+            if contact['UID'] in self.members:
                 cCheck.setCheckState(Qt.Checked)
 
-            self.CheckBoxList[uid] = cCheck
+            self.CheckBoxList[contact['UID']] = cCheck
 
             cLayout.addWidget(cLabel)
             cLayout.addStretch(1)

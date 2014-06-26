@@ -5,7 +5,7 @@ from LabelExtension import *
 from chat_ui import QChatWindow
 from contacts import contactList
 from Sound import Sound
-import login_ui
+#import login_ui
 from os import path
 import time
 
@@ -55,7 +55,9 @@ class MainWindow(QMainWindow):
         # Set Windwo Icon
         self.setWindowIcon(QIcon('img/pysims_icon_16.png')) 
         # Set Window Position and Size
-        self.setGeometry(10, 50, 250, 500)
+        self.setGeometry(10, 50, 250, 400)
+        self.setFixedWidth(250)
+
         # Show Statusbar
         self.statusBar().showMessage('Verbinung hergestellt')
 
@@ -206,7 +208,6 @@ class MainWindow(QMainWindow):
 
     def updateContacts(self, contactList):
 
-
         sortedList = sorted(contactList.items(), key= lambda x: x[1]['name'].lower())
 
         self.ContactScrollContainer.deleteLater()
@@ -220,6 +221,7 @@ class MainWindow(QMainWindow):
             cLayout = QHBoxLayout()
 
             cLabel = QLabel(contact['name'])
+            cLabel.setMinimumSize(QSize(100,24))
             cLabel.setStyleSheet("QLabel {font-size: 14px}")
 
             StatusImgPath = path.join('img/user/',contact['status'] +'.png')
@@ -228,22 +230,16 @@ class MainWindow(QMainWindow):
             cStatus.setToolTip(contact['status'])
             cStatus.setPixmap(cStatusPixmap)
 
-            cChatPixmap = QPixmap('img/user/chat.png')
+            cChatPixmap = QPixmap('img/main/chat.png')
             cChat = ClickableChat(self, contact['UID'])
             cChat.setPixmap(cChatPixmap)
             cChat.setToolTip('Chat beginnen')
             cChat.openChat.connect(self.openChat)
 
-            cGroupPixmap = QPixmap('img/user/add_group.png')
-            cGroup = ClickableLabel(self)
-            cGroup.setToolTip('Gruppenchat')
-            cGroup.setPixmap(cGroupPixmap)
-
             cLayout.addWidget(cLabel)
             cLayout.addStretch(1)
             cLayout.addWidget(cStatus)
             cLayout.addWidget(cChat)
-            cLayout.addWidget(cGroup)
 
             self.ContactListLayout.addLayout(cLayout)
             
@@ -352,6 +348,7 @@ class MainWindow(QMainWindow):
         self.logout()
 
     def logout(self):
+        self.sound.conError()
         self.parent.show()
         #self.Log = login_ui.LoginWindow()
         #self.Log.show()
