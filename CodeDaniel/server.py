@@ -16,7 +16,6 @@ class User(socketserver.BaseRequestHandler):
             # Receive one string
             try:
                 userrequest = self.getString()
-                # print(userrequest)
             except:
                 break
             # print(userrequest)
@@ -34,9 +33,6 @@ class User(socketserver.BaseRequestHandler):
         # Check for USER command
         elif 'USER' in request:
             ok = parsing.userHandle(self, request, connections)
-        # Check for PASS command, must not be executed without USER command
-        elif 'PASS' in request:
-            self.sendString("PASS WITHOUT USER\r\n")
         # Check for GETLIST command, must not be executed if user is not yet online
         elif 'GETLIST' in request:
             if self.online == False:
@@ -58,6 +54,8 @@ class User(socketserver.BaseRequestHandler):
             parsing.sendMsgHandle(self, request, connections)
         elif 'PULLMSGS' in request:
             parsing.pullMsgsHandle(self)
+        elif 'FORGOTPASS' in request:
+            parsing.forgotPassHandle(self, request)
         # Check for QUIT command
         elif request == "QUIT\r\n":
             self.setOnline(False)
@@ -93,20 +91,20 @@ class User(socketserver.BaseRequestHandler):
         self.c.execute("UPDATE users SET status = ? WHERE userid=?", (self.online, self.ID))
         self.db.commit()
         
-    def storeMsg(self, uid, gid, msg):
-        self.c.execute("INSERT into messages (UID, GID, message) VALUES (?, ?, ?)", (uid, gid, msg))
+    def storeMsg(self, sender_uid, uid, gid, msg):
+        self.c.execute("INSERT into messages (sender_UID, UID, GID, message) VALUES (?, ?, ?, ?)", (sender_uid, uid, gid, msg))
         self.db.commit()
         
     def pushMsgs(self):
-        self.c.execute("SELECT ID, GID, message, pushed FROM messages WHERE UID=? AND pushed=0", (self.ID,))
+        self.c.execute("SELECT ID, sender_UID, UID, GID, message, pushed FROM messages WHERE UID=? AND pushed=0", (self.ID,))
         for row in self.c.fetchall():
             msg = "DLVMSG\r\n"
             msg += "GID:"+str(row[1])+"\r\n"
-            msg += "UID:"+str(row['ID'])+"\r\n"
-            msg += str(row[2])
+            msg += "UID:"+str(row['sender_UID'])+"\r\n"
+            msg += str(row['message'])
             msg += "\r\n\r\n"
             self.sendString(msg)
-            self.c.execute("UPDATE messages SET pushed=1 WHERE ID=?", (row[0],))
+            self.c.execute("UPDATE messages SET pushed=1 WHERE ID=?", (row['ID'],))
         self.db.commit()
     
     def deliverMsg(self, gid, uid, msg):
@@ -147,10 +145,11 @@ class User(socketserver.BaseRequestHandler):
             usrlist += "UID:"+str(row[0])+","+row[1]+","+row[2]+"\r\n"
         # Terminate list
         usrlist += ("\r\n")
-        print(connections)
+        # print(connections)
         try:
             for user in connections:
-                user.sendString(usrlist)
+                if user.online == True:
+                    user.sendString(usrlist)
         except:
             pass
                  

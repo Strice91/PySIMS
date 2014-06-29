@@ -8,6 +8,7 @@ from PySide.QtGui import *
 from LabelExtension import *
 from ClassConnect import TcpClient
 from register_ui import RegisterWindow
+from forgetpw_ui import ForgetPwWindow
 from main_ui import MainWindow
 from Sound import Sound
 import time
@@ -163,8 +164,10 @@ class LoginWindow(QWidget):
 
     # Send ForgotPass to Server
     def forgotPass(self):
-        print ("Username: %s" % self.usernameEdit.text())   
-        pass
+        #print ("Username: %s" % self.usernameEdit.text())   
+        #pass
+        self.ForgetPwWindow=ForgetPwWindow(parent=self)
+        self.ForgetPwWindow.exec_()
 
     # Call register Routine
     def register(self):

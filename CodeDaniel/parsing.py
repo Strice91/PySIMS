@@ -5,9 +5,11 @@ import hashlib
 # This function implements the REGISTER [username] [password] command
 def registerHandle(self, request):
     print("registerHandle")
-    split = request.split(" ")
-    username = split[1].strip()
-    password = split[2].strip()
+    split = request.split("\r\n")
+    username = split[0].split(' ')[1].strip()
+    password = split[0].split(' ')[2].strip()
+    question = split[1]
+    answer = split[2]
     passhash = hashlib.md5()
     passhash.update(password.encode('UTF-8'))
     # Check if username already in DB
@@ -16,7 +18,7 @@ def registerHandle(self, request):
         self.sendString("REGUSER ERR\r\n")
     else:
         # If username is free add the user to the database
-        self.c.execute("INSERT INTO users (username, password) VALUES (?,?)", (username, passhash.hexdigest()))
+        self.c.execute("INSERT INTO users (username, password, question, answer) VALUES (?,?,?,?)", (username, passhash.hexdigest(), question, answer))
         self.db.commit()
         print("Successfully registered user",username)
         self.sendString("REGISTER OK\r\n")
@@ -25,24 +27,25 @@ def registerHandle(self, request):
 # This function implements the USER [username] and PASS [password] command
 def userHandle(userobject, request, users):
     print("userHandle")
-    if "WEBUI" in request:
-        # print("WebUI")
-        userobject.WebUI = True
+    # print(request)
     split = request.split(" ")
     # Get username from request
     username = split[1].strip()
     # Check if user in DB
     userobject.c.execute("SELECT * FROM users WHERE username=?", (username,))
     login = userobject.c.fetchone()
-    if False:#login == None:
+    if login == None:
         userobject.sendString("USER ERR\r\n")
         print("User", username, "not found.")
+        return True
     else:
         userobject.sendString("USER OK\r\n")
         # Wait for PASS [password] command
         passcommand = userobject.getString()
+        # print(passcommand)
         if not "PASS" in passcommand:
             userobject.sendString("LOGIN ABORTED\r\n")
+            return True
         else:
             # Check if received password is ok
             password = passcommand.split(" ")[1].strip()
@@ -51,6 +54,7 @@ def userHandle(userobject, request, users):
             if not passhash.hexdigest() == login[2]:
                 userobject.sendString("PASS ERR\r\n")
                 print("User", username, "entered wrong password.")
+                return True
             else:
                 # If password is ok, set the UID, generate SID, set User to 'online' and return OK and SID
                 userobject.ID = login[0]
@@ -74,6 +78,7 @@ def getListHandle(self):
     self.sendList([self])
 
 def pullMsgsHandle(self):
+    print("pullMsgsHandle")
     self.pushMsgs()
 
 # This function implements the MKGRP command
@@ -119,7 +124,7 @@ def getgrpsHandle(self, request):
 # This function implements the GETGRPMBRS command
 def getgrpmbrsHandle(self, request):
     print("getgrpmbrsHandle")
-    print(request.split("\r\n"))
+    # print(request.split("\r\n"))
     gid = request.split("\r\n")[1].lstrip("GID:")
     grpmbrs = "MEMBERS\r\n"
     grpmbrs += "GID:"+gid+"\r\n"
@@ -139,7 +144,7 @@ def updateGrpHandle(self, request, connections):
     for member in split[2:]:
         if not member == split[-1]:
             userline = member.split(',')
-            print(userline)
+            # print(userline)
             uid = int(userline[0].lstrip('UID:'))
             flag = userline[1].strip()  
             if flag == "1":
@@ -179,7 +184,7 @@ def sendMsgHandle(self, request, connections):
                         user.deliverMsg(gid, self.ID, message)
             else:
                 if not row['userid'] == self.ID:
-                    self.storeMsg(row[0], gid, message)
+                    self.storeMsg(self.ID, row[0], gid, message)
         
     """for user in connections:
         if user.ID in targetusers and self.ID != user.ID:
@@ -191,7 +196,7 @@ def sendMsgHandle(self, request, connections):
     self.sendString("MSG OK\r\nGID:"+gid+"\r\n\r\n")
 
 def checkForExistingGroup(self, userids):
-    print(userids)
+    # print(userids)
     self.c.execute("SELECT GID, UID FROM groupmembers")
     guids = {}
     for row in self.c.fetchall():
@@ -215,5 +220,34 @@ def checkForExistingGroup(self, userids):
     return None
 
     
-    
-
+def forgotPassHandle(self, request):
+    print('forgotPassHandle')
+    user = request.split(' ')[1].strip()
+    print("User", user, "forgot password")
+    self.c.execute("SELECT question, answer FROM users WHERE username=?", (user,))
+    row = self.c.fetchone()
+    if row:
+        msg = "FORGOTPASS OK\r\n"
+        msg += row['question']+"\r\n"
+        msg += "\r\n"
+        self.sendString(msg)
+        print("User found")
+    else:
+        self.sendString("FORGOTPASS ERR\r\n")
+        return
+    useranswer = self.getString().strip()
+    useranswer = useranswer.split(' ')[1]
+    print(useranswer)
+    if useranswer == row['answer']:
+        print("User sent correct answer")
+        self.sendString("ANSWER OK\r\n")
+    else:
+        self.sendString("ANSWER ERR\r\n")
+        return
+    userpass = self.getString()
+    passhash = hashlib.md5()
+    passhash.update(userpass.encode('UTF-8'))
+    self.c.execute("UPDATE users SET password=? WHERE username=?", (passhash.hexdigest(), user))
+    self.db.commit()
+    self.sendString("CHANGEPASS OK\r\n")
+    print("changepass successful")

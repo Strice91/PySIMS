@@ -5,6 +5,7 @@ from LabelExtension import *
 from chat_ui import QChatWindow
 from contacts import contactList
 from Sound import Sound
+from about import AboutWindow
 #import login_ui
 from os import path
 import time
@@ -83,7 +84,7 @@ class MainWindow(QMainWindow):
         # Create About
         aboutAction = QAction(QIcon('img/main/about.png'), 'Ueber PySIMS', self)
         aboutAction.setStatusTip('Ueber PySIMS')
-        #settingsAction.triggered.connect(self.close)
+        aboutAction.triggered.connect(self.openAboutWindow)
 
         # Create Help
         helpAction = QAction(QIcon('img/main/help.png'), 'Hilfe', self)
@@ -247,6 +248,11 @@ class MainWindow(QMainWindow):
         self.ContactScrollContainer.setLayout(self.ContactListLayout)
         # Add Container to Scroll Area
         self.ContactScroll.setWidget(self.ContactScrollContainer) 
+
+    def openAboutWindow(self):
+        self.AboutWindow = AboutWindow(parent=self)
+       
+        self.AboutWindow.exec_()
 
     def requestList(self):
         req = 'GETLIST'

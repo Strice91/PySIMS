@@ -37,9 +37,11 @@ class RegisterWindow(QDialog):
         # Set Password Confirmation to not readable
         self.passwordConEdit.setEchoMode(QLineEdit.Password)
 
-        # Create Email Input
-        self.emailEdit = QLineEdit("")
-        self.emailLabel = QLabel("E-Mail:")
+        # Create SecQues Input
+        self.squesEdit = QLineEdit("")
+        self.squesLabel = QLabel("Sicherheitsfrage:")
+        self.sansEdit = QLineEdit("")
+        self.sansLabel = QLabel("Antwort:")
 
         # Create Login Button
         self.regBtn = QPushButton("Registrieren")
@@ -56,8 +58,10 @@ class RegisterWindow(QDialog):
         layout.addWidget(self.passwordConLabel)
         layout.addWidget(self.passwordConEdit)
         layout.addWidget(self.Hint)
-        layout.addWidget(self.emailLabel)
-        layout.addWidget(self.emailEdit)
+        layout.addWidget(self.squesLabel)
+        layout.addWidget(self.squesEdit)
+        layout.addWidget(self.sansLabel)
+        layout.addWidget(self.sansEdit)
         layout.addWidget(self.regBtn)
 
 
@@ -72,16 +76,20 @@ class RegisterWindow(QDialog):
         self.userName    = self.usernameEdit.text() 
         self.password    = self.passwordEdit.text()
         self.passwordCon = self.passwordConEdit.text()
+        self.sques        = self.squesEdit.text()
+        self.sans        = self.sansEdit.text()
         
         if (self.password):
             if (self.password==self.passwordCon):
-                print("RICHTIG")
-                req = 'REGISTER ' + self.userName + ' ' + self.password
-                self.tcp.sendReq(req)
+                #print("RICHTIG")
+                if(self.sques):
+                    if(self.sans):
+                        req = 'REGISTER ' + self.userName + ' ' + self.password + '\r\n' + self.sques + '\r\n' + self.sans + '\r\n\r\n'
+                        self.tcp.sendReq(req)
     
             else:
                 print("FALSCH")
-                self.Hint.setText("<font color=red>Passwörter nicht gleich</font>")
+                self.Hint.setText(u"<font color=red>Passwoerter nicht gleich</font>")
 
 
     @Slot(str, str)
