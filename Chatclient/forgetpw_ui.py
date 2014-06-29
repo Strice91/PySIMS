@@ -73,8 +73,9 @@ class ForgetPwWindow(QDialog):
             #print("BLABLABLA")
             #print("ANSWER:")
             #print(
-            self.sques=ans[1]
+            
             if(ans[0]=="FORGOTPASS OK"):
+                self.sques=ans[1]
                 self.Window2open()
             
     

@@ -25,8 +25,14 @@ class QChatWindow(QWidget):
         self.sound = Sound()
         self.initUI()
 
-        if msg:
-            self.appendText(senderID,msg)
+        if senderID:
+            if type(senderID) == type(['list']):
+                i = 0
+                for UID in senderID:
+                    self.appendText(UID,msg[i])
+                    i += 1
+            else:
+                self.appendText(senderID,msg)
 
     def initEditForm(self):
         

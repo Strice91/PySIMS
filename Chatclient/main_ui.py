@@ -297,6 +297,10 @@ class MainWindow(QMainWindow):
 
     @Slot(str, str)
     def parseAns(self, lastReq, ServerAns):
+
+        dlvmsg = False
+        gids = {}
+
         for ans in ServerAns.split('\r\n\r\n'):
             ans = ans.split('\r\n')
             print('------  Main Window Recived: -----')
@@ -316,14 +320,25 @@ class MainWindow(QMainWindow):
             if ans[0] == 'DLVMSG':
                 GID = ans[1].split(':')
                 UID = ans[2].split(':')
-                msg = ans[3]
                 if GID[0] == 'GID':
-                    if UID[0] == 'UID':
-                        UID = UID[1]
-                        #print(msg)
-                        self.sendAck()
-                        self.checkChatWindow(GID[1], UID, msg)
-                        self.sound.newWindow()
+                    if GID[1] in gids:
+                        if UID[0] == 'UID':
+                            gids[GID[1]]['UIDS'].append(UID[1])
+                            gids[GID[1]]['MSGS'].append(ans[3])
+                    else:
+                        if UID[0] == 'UID':
+                            gids[GID[1]] = {'UIDS': [], 'MSGS': []}
+                            gids[GID[1]]['UIDS'].append(UID[1])
+                            gids[GID[1]]['MSGS'].append(ans[3])
+                        
+
+
+        if gids:
+            for gid in gids:
+                print(gids[gid])
+                #self.sendAck()
+                self.checkChatWindow(gid, gids[gid]['UIDS'], gids[gid]['MSGS'])
+                self.sound.newWindow()
 
                     
 
