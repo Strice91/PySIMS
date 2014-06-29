@@ -41,7 +41,7 @@ class LoginWindow(QWidget):
         self.setWindowTitle('PySIMS')
         # Set Windwo Icon
         self.setWindowIcon(QIcon('img/pysims_icon_16.png')) 
-        self.setFixedSize(200,300)
+        self.setFixedSize(200,350)
 
         # Create widgets ---------------------------------------------
         # Create Logo
