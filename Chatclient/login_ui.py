@@ -167,7 +167,7 @@ class LoginWindow(QWidget):
         #print ("Username: %s" % self.usernameEdit.text())   
         #pass
         self.ForgetPwWindow=ForgetPwWindow(parent=self)
-        self.ForgetPwWindow.exec_()
+        self.ForgetPwWindow.show()
 
     # Call register Routine
     def register(self):

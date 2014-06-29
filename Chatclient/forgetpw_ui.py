@@ -60,7 +60,9 @@ class ForgetPwWindow(QDialog):
         
         self.secq = SecQuestion(parent=self)
         self.secq.setWindowTitle(self.tr('Sicherheitsfrage'))
-        self.secq.exec_()
+        self.close()
+        self.secq.show()
+
 
         #self.close()
     @Slot(str, str)
@@ -68,7 +70,7 @@ class ForgetPwWindow(QDialog):
         lastCommand = lastReq.split()
         for ans in ServerAns.split('\r\n\r\n'):
             ans = ans.split('\r\n')
-            print("BLABLABLA")
+            #print("BLABLABLA")
             #print("ANSWER:")
             #print(
             self.sques=ans[1]
@@ -82,9 +84,8 @@ class SecQuestion(QDialog):
     def __init__(self, parent=None):
         super(SecQuestion, self).__init__(parent)
         
-        self.parent = parent
+        self.parent = parent        
         self.tcp = parent.tcp
-
         self.tcp.recvAns.connect(self.parseAns)
 
         self.sques=parent.sques
@@ -124,17 +125,16 @@ class SecQuestion(QDialog):
 
         self.conPW = ConfirmPassWord(parent=self)
         self.conPW.setWindowTitle(self.tr('Passwort zuruecksetzen'))
-        self.conPW.exec_()
+        self.close()
+        self.conPW.show()
 
     @Slot(str, str)
     def parseAns(self, lastReq, ServerAns):
         lastCommand = lastReq.split()
         for ans in ServerAns.split('\r\n\r\n'):
             ans = ans.split('\r\n')
-        print("HAAAAAAAAAAAAAAAALLLLLLLLLLOOOOOOOO")
-            
-        if(ans[0]=="ANSWER OK"):
-            self.Window3open()
+            if(ans[0]=="ANSWER OK"):
+                self.Window3open()
 
 
 
@@ -143,6 +143,7 @@ class ConfirmPassWord(QDialog):
         super(ConfirmPassWord, self).__init__(parent)
 
         self.parent = parent
+        self.tcp = parent.tcp
         self.tcp.recvAns.connect(self.parseAns)
 
 

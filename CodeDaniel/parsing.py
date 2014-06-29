@@ -245,6 +245,7 @@ def forgotPassHandle(self, request):
         self.sendString("ANSWER ERR\r\n")
         return
     userpass = self.getString()
+    userpass = userpass.split(' ')[1].strip()
     passhash = hashlib.md5()
     passhash.update(userpass.encode('UTF-8'))
     self.c.execute("UPDATE users SET password=? WHERE username=?", (passhash.hexdigest(), user))
