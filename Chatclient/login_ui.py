@@ -33,6 +33,7 @@ class LoginWindow(QWidget):
         self.passwd = None
         self.StatusUSER = False
         self.StatusPASS = False
+        self.conStat=False
         self.SID = None
         self.UID = None
 
@@ -41,7 +42,7 @@ class LoginWindow(QWidget):
         self.setWindowTitle('PySIMS')
         # Set Windwo Icon
         self.setWindowIcon(QIcon('img/pysims_icon_16.png')) 
-        self.setFixedSize(200,350)
+        self.setFixedSize(200,300)
 
         # Create widgets ---------------------------------------------
         # Create Logo
@@ -114,7 +115,9 @@ class LoginWindow(QWidget):
         self.passwordEdit.setFocus()
 
     def jumpFunction2(self):
-        self.sendUser()
+        
+        if(self.conStat==True):
+            self.sendUser()
 
     # Send Username to Server
     def sendUser(self):
@@ -235,6 +238,7 @@ class LoginWindow(QWidget):
             self.messageLabel.setText("<font color=red>Server zur Zeit nicht erreichbar!</font>")
             self.tcp.abort()
             self.loginBtn.setEnabled(False)
+            self.conStat=False
             self.rconTimer.start(5000)
         print(err)
 
@@ -248,6 +252,7 @@ class LoginWindow(QWidget):
         self.logoLabel.setPixmap(self.logo)
         self.messageLabel.setText('')
         self.loginBtn.setEnabled(True)
+        self.conStat=True
 
 
 

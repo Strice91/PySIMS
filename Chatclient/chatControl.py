@@ -20,6 +20,7 @@ class chatEditWindow(QDialog):
         # Adjust Window ----------------------------------------------
         self.resize(150, 300)
         self.setWindowTitle('GID: ' + self.GID)
+        self.setFixedSize(150,300)
         
         layout = QVBoxLayout()
 
@@ -78,19 +79,22 @@ class chatEditWindow(QDialog):
     def updateMembers(self):
 
         statusList = []
+        oneUserInList = False
         statusList.append('UID:'+ self.parent.UID + ",1")
         for uid in self.CheckBoxList:
             status = self.CheckBoxList[uid].isChecked()
             statusStatement = "UID:" + uid
             if status:
                 statusStatement += ",1"
+                oneUserInList = True
             else:
                 statusStatement += ",0"
 
             statusList.append(statusStatement)
         #print(statusList)
-        self.sendMemberList(statusList)
-        self.close()
+        if oneUserInList:
+            self.sendMemberList(statusList)
+            self.close()
 
     def sendMemberList(self, statusList):
         req = "UPDATEGROUP\r\n"

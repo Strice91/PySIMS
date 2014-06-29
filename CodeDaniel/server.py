@@ -99,7 +99,7 @@ class User(socketserver.BaseRequestHandler):
         self.c.execute("SELECT ID, sender_UID, UID, GID, message, pushed FROM messages WHERE UID=? AND pushed=0", (self.ID,))
         for row in self.c.fetchall():
             msg = "DLVMSG\r\n"
-            msg += "GID:"+str(row[1])+"\r\n"
+            msg += "GID:"+str(row['GID'])+"\r\n"
             msg += "UID:"+str(row['sender_UID'])+"\r\n"
             msg += str(row['message'])
             msg += "\r\n\r\n"
