@@ -51,10 +51,10 @@ class LoginWindow(QWidget):
         self.logoLabel.setPixmap(self.logo)
 
         # Create Forgot Password
-        self.forgotPassLabel = ClickableLabel("Passwort vergessen?")
-
+        self.forgotPassLabel = ClickableLabel("<font size=10px>Passwort vergessen?</font>")
+        #self.forgotPassLabel.set
         # Create Sign Up
-        self.SignUpLabel = ClickableLabel("Registrieren")
+        self.SignUpLabel = ClickableLabel("<font size=10px>Registrieren</font>")
 
         # Create Message Label
         self.messageLabel = QLabel()
@@ -235,7 +235,7 @@ class LoginWindow(QWidget):
 
     def tcpError(self, err):
         if err == 'ConnectionRefused' or err == 'ConnectionClosed':
-            self.messageLabel.setText("<font color=red>Server zur Zeit nicht erreichbar!</font>")
+            self.messageLabel.setText("<font color=red>Server nicht erreichbar!</font>")
             self.tcp.abort()
             self.loginBtn.setEnabled(False)
             self.conStat=False
