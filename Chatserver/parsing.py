@@ -77,6 +77,7 @@ def getListHandle(self):
     print("getListHandle")
     self.sendList([self])
 
+# This function implements the PULLMSGS command
 def pullMsgsHandle(self):
     print("pullMsgsHandle")
     self.pushMsgs()
@@ -92,10 +93,13 @@ def mkgrpHandle(self, request):
     sid = request.split("\r\n")[2]
     sid = sid.lstrip("SID:").rstrip("\r\n")
     # print(sid)
+    # Convert all UIDs to ints
     intuserids = []
     for userid in userids:
         intuserids.append(int(userid))
+    # Check if there is already a group with this constellation
     gid = checkForExistingGroup(self, intuserids)
+    # if not, create a new one
     if gid == None:
         timestamp = int(time.time())
         self.c.execute("INSERT INTO groups (creationdate) VALUES (?)", (timestamp,))
@@ -106,6 +110,7 @@ def mkgrpHandle(self, request):
         self.db.commit()
         self.sendString("MKGRP OK\r\nGID:"+str(gid)+"\r\n\r\n")
         print("Created group", gid, "with users", userids)
+    # Else return the known GID
     else:
         self.sendString("MKGRP OK\r\nGID:"+str(gid)+"\r\n\r\n")
         # print("Group alread exists")
@@ -135,12 +140,15 @@ def getgrpmbrsHandle(self, request):
     grpmbrs += "\r\n"
     self.sendString(grpmbrs)
 
+# This function implements the UPDATEGROUP command
 def updateGrpHandle(self, request, connections):
     print("updateGrpHandle")
     split = request.split('\r\n')
     gid = split[1].lstrip('GID:')
+    # Delete all current group members
     self.c.execute("DELETE FROM groupmembers WHERE GID=?", (gid,))
     uids = []
+    # Add the new users to the group
     for member in split[2:]:
         if not member == split[-1]:
             userline = member.split(',')
@@ -157,6 +165,7 @@ def updateGrpHandle(self, request, connections):
     for uid in uids:
         msg += "UID:"+str(uid)+"\r\n"
     msg += "\r\n"
+    # Send the new group to every user which is online and part of the new group
     for user in connections:
         if user.ID in uids and user.online == True:
             print("Send new group to user", user.ID)
@@ -170,12 +179,14 @@ def sendMsgHandle(self, request, connections):
     gid = split[2].lstrip("GID:")
     message = split[3]
     # print(message)
+    # Get target group members
     self.c.execute("SELECT uid FROM groupmembers WHERE gid=?", (gid,))
     targetusers = []
     for row in self.c.fetchall():
         targetusers.append(row[0])
-        
+    
     self.c.execute("SELECT userid, status FROM users")
+    # Deliver the message to every user in the target group
     for row in self.c.fetchall():
         if row['userid'] in targetusers:
             if row['status'] == "1":
@@ -183,18 +194,14 @@ def sendMsgHandle(self, request, connections):
                     if user.ID == row[0] and user.ID != self.ID:
                         user.deliverMsg(gid, self.ID, message)
             else:
+                # if user is not online, store the message
                 if not row['userid'] == self.ID:
                     self.storeMsg(self.ID, row[0], gid, message)
-        
-    """for user in connections:
-        if user.ID in targetusers and self.ID != user.ID:
-            if user.online = True:
-                user.sendString(message)
-            else:
-                user.storeMsg(user.IDgid, message)"""
     
+    # Return the MSG OK to the sender
     self.sendString("MSG OK\r\nGID:"+gid+"\r\n\r\n")
 
+# Checks if there is already a group of users with "userids" as members
 def checkForExistingGroup(self, userids):
     # print(userids)
     self.c.execute("SELECT GID, UID FROM groupmembers")
@@ -210,23 +217,23 @@ def checkForExistingGroup(self, userids):
     userids.sort()
 
     for group in guids.keys():
-        #print(group)
-        # print(userids)
-        # print(guids[group])
         guids[group].sort()
         if userids == guids[group]:
             return group
 
     return None
 
-    
+# This function implements the FORGOTPASS process
 def forgotPassHandle(self, request):
     print('forgotPassHandle')
     user = request.split(' ')[1].strip()
     print("User", user, "forgot password")
+    # Get security question from DB
     self.c.execute("SELECT question, answer FROM users WHERE username=?", (user,))
     row = self.c.fetchone()
+    # Check if user exists
     if row:
+        # if user exists, send security question
         msg = "FORGOTPASS OK\r\n"
         msg += row['question']+"\r\n"
         msg += "\r\n"
@@ -235,17 +242,21 @@ def forgotPassHandle(self, request):
     else:
         self.sendString("FORGOTPASS ERR\r\n")
         return
+    # Wait for the answer of the user
     useranswer = self.getString().strip()
     useranswer = useranswer.split(' ')[1]
     print(useranswer)
+    # Check if answer is correct
     if useranswer == row['answer']:
         print("User sent correct answer")
         self.sendString("ANSWER OK\r\n")
     else:
         self.sendString("ANSWER ERR\r\n")
         return
+    # Wait for new password
     userpass = self.getString()
     userpass = userpass.split(' ')[1].strip()
+    # Hash password and replace old one in DB
     passhash = hashlib.md5()
     passhash.update(userpass.encode('UTF-8'))
     self.c.execute("UPDATE users SET password=? WHERE username=?", (passhash.hexdigest(), user))
