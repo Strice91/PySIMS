@@ -12,8 +12,12 @@ import time
 
  
 class MainWindow(QMainWindow):
-
+    """ This class builds the main window pf PySIMS. It is able to
+        open the chat windows. Chat windows are opend when the Server
+        pushes new messages or the user wants to start a chat."""
+    # Signal to make a new ChatWindo with a message
     openChat = Signal(str)
+    # Incoming new message
     newMsg = Signal(str, str)
 
     # Cunstructor of MainWindow ##############################################
@@ -107,7 +111,6 @@ class MainWindow(QMainWindow):
 
 
         # Create layout and add widgets --------------------------------------
-
         widget = QWidget()
         self.setCentralWidget(widget)
 
@@ -121,8 +124,10 @@ class MainWindow(QMainWindow):
 
         widget.setLayout(layout)
 
+    # Style ##################################################################
     def setStyle(self):
 
+        # Set the Syle for all classes
         self.setStyleSheet( """
                             QLabel[labelClass='Username'] 
                             {font-size: 16px;
@@ -130,6 +135,7 @@ class MainWindow(QMainWindow):
                             }
                             """)
 
+    # Contact List ###########################################################
     def Contacts(self):
 
         # Create Contact Group Box
@@ -153,6 +159,7 @@ class MainWindow(QMainWindow):
         # Add Layout to Group
         self.ContactGroup.setLayout(layout)
 
+    # User Profile ###########################################################
     def Profile(self):
 
         # Create the Profile Groupbox
@@ -198,6 +205,8 @@ class MainWindow(QMainWindow):
         # Add to Profile Group
         self.ProfileGroup.setLayout(ProfileLayout)
 
+    # Control Group Box ######################################################
+    # For adding addition Features to the main Window
     def Control(self):
 
         self.ControlGroup = QGroupBox('Control')
@@ -209,39 +218,48 @@ class MainWindow(QMainWindow):
 
     def updateContacts(self, contactList):
 
+        # Sort contacts by name
         sortedList = sorted(contactList.items(), key= lambda x: x[1]['name'].lower())
 
+        # Empty old Contact list
         self.ContactScrollContainer.deleteLater()
         self.ContactScrollContainer = QWidget()
         self.ContactListLayout = None
         self.ContactListLayout = QVBoxLayout()
 
+        # Add every Contact from the List
         for c in sortedList:
 
+            # exxtract contact
             contact = c[1]
             cLayout = QHBoxLayout()
 
+            # Name
             cLabel = QLabel(contact['name'])
             cLabel.setMinimumSize(QSize(100,24))
             cLabel.setStyleSheet("QLabel {font-size: 14px}")
 
+            # Status
             StatusImgPath = path.join('img/user/',contact['status'] +'.png')
             cStatusPixmap = QPixmap(StatusImgPath)
             cStatus = QLabel()
             cStatus.setToolTip(contact['status'])
             cStatus.setPixmap(cStatusPixmap)
 
+            # Add Chat Button
             cChatPixmap = QPixmap('img/main/chat.png')
             cChat = ClickableChat(self, contact['UID'])
             cChat.setPixmap(cChatPixmap)
             cChat.setToolTip('Chat beginnen')
             cChat.openChat.connect(self.openChat)
 
+            # Build the Contact horizontal Layout
             cLayout.addWidget(cLabel)
             cLayout.addStretch(1)
             cLayout.addWidget(cStatus)
             cLayout.addWidget(cChat)
 
+            # Add contact to the List
             self.ContactListLayout.addLayout(cLayout)
             
         # Add Contactlist to Container
@@ -250,19 +268,22 @@ class MainWindow(QMainWindow):
         self.ContactScroll.setWidget(self.ContactScrollContainer) 
 
     def openAboutWindow(self):
+        # Open the About Window
         self.AboutWindow = AboutWindow(parent=self)
-       
         self.AboutWindow.exec_()
 
     def requestList(self):
+        # Request the userlist from the Server
         req = 'GETLIST'
         self.tcp.sendReq(req)
 
     def requestMsg(self):
+        # Request Messages from the Server
         req = 'PULLMSGS'
         self.tcp.sendReq(req)
 
     def requestGID(self, members):
+        # Request a group ID to open a new Chat
         req = 'MKGRP\r\n'
         req += 'UID:'
         for userID in members:
@@ -276,12 +297,13 @@ class MainWindow(QMainWindow):
         self.tcp.sendReq(req)
 
     def sendAck(self):
+        # Send ACK to Server
         #self.tcp.sendReq('ACK\r\n')
         #print('ACK sent')
         pass
 
     def changeStatus(self, status):
-
+        # Change the Status of the online mode
         if status == 0:
             # Online
             print('New Status: Online')
@@ -297,26 +319,31 @@ class MainWindow(QMainWindow):
 
     @Slot(str, str)
     def parseAns(self, lastReq, ServerAns):
+        # Parse the message from the Server
 
         dlvmsg = False
         gids = {}
 
+        # Split the different Commands
         for ans in ServerAns.split('\r\n\r\n'):
             ans = ans.split('\r\n')
             print('------  Main Window Recived: -----')
             print(ans)
             print('----------------------------------')
 
+            # Is it a new Userlist?
             if ans[0] == 'USRLIST':
                 myContacts = contactList(ans[1:], self.parent.userName)
                 self.contactList = myContacts.getList()
                 self.updateContacts(self.contactList)
 
+            # Is it a new GroupID for a Chat?
             if ans[0] == 'MKGRP OK':
                 GID = ans[1].split(':')
                 if GID[0] == 'GID':
                     self.checkChatWindow(GID[1])
             
+            # Is it a new Message?
             if ans[0] == 'DLVMSG':
                 GID = ans[1].split(':')
                 UID = ans[2].split(':')
@@ -332,7 +359,9 @@ class MainWindow(QMainWindow):
                             gids[GID[1]]['MSGS'].append(ans[3])
                         
 
-
+        # If there are more than one message and more groups that got new
+        # Messages it is important to give the right Messages to the right
+        # chat windows
         if gids:
             for gid in gids:
                 print(gids[gid])
@@ -344,11 +373,14 @@ class MainWindow(QMainWindow):
 
     @Slot(str)
     def openChat(self, memberID):
+        # Open a new Chat
         print('Open Chat with', memberID)
         members = [self.UID, memberID] 
         self.requestGID(members)
 
     def checkChatWindow(self, gid, senderID=None, msg=None):
+        # Check if the Chat allready exsists or if it is
+        # nescessary to open a new window
 
         #print('SenderID:', senderID)
         if gid in self.ChatWindows:
@@ -360,6 +392,7 @@ class MainWindow(QMainWindow):
 
     @Slot(str)
     def tcpError(self, err):
+        # Detect network error and forward the errortype
         if err == 'ConnectionClosed':
             self.statusBar().showMessage('Verbinung unterbrochen!')
             self.ProfileinfoLabel.setText('<font color=red>Verbinung unterbrochen!</font>')
@@ -369,6 +402,7 @@ class MainWindow(QMainWindow):
         self.logout()
 
     def logout(self):
+        # Logout the user and show the login Window
         self.sound.conError()
         self.parent.show()
         #self.Log = login_ui.LoginWindow()
@@ -378,11 +412,18 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, ev):
 
+        # When the main Window is closes than all the
+        # other windows should close too.
+
+        # It is important to search all open chats because
+        # should not change the array while ittarting
         gids = []
         for gid in self.ChatWindows:
+            # Find all open Chats
             gids.append(gid)
 
         for gid in gids:
+            # Close all open Chats
             self.ChatWindows[gid].close() 
 
     ##########################################################################

@@ -19,16 +19,19 @@ class LoginWindow(QWidget):
     def __init__(self, ip=None, port=None, parent=None):
         super(LoginWindow, self).__init__()
 
+        # Perform Tcp Connection
         self.tcp = TcpClient(ip, port)
         self.tcp.recvAns.connect(self.parseAns)
+        # Connect errorhandling
         self.tcp.ConError.connect(self.tcpError)
         self.tcp.connected.connect(self.tcpConnected)
-
+        # Setup reconnect Timer
         self.rconTimer = QTimer(self)
         self.rconTimer.timeout.connect(self.tryReconnect)
-
+        # Create Sound Object
         self.sound = Sound()
 
+        # init userData
         self.userName = None
         self.passwd = None
         self.StatusUSER = False
@@ -147,7 +150,7 @@ class LoginWindow(QWidget):
             req = 'PASS ' + self.passwd + '\r\n'
             self.tcp.sendReq(req)
 
-
+    # If all Data is correct the user will be logged in
     def login(self):
         self.sound.login()
         self.window = MainWindow(parent=self)
@@ -156,6 +159,7 @@ class LoginWindow(QWidget):
 
         self.close()
 
+    # If there is wrong Data the Labels are colored Red
     def wrongData(self, data):
         self.logoLabel.setPixmap(self.logo)
         if data == 'USER':
@@ -181,11 +185,13 @@ class LoginWindow(QWidget):
 
         #print ("Username: %s" % self.usernameEdit.text())
 
+    # Abbort Login (TODO)
     def logoClick(self):
         print ("Logo geklickt!")
         # Show normal Logo
         self.logoLabel.setPixmap(self.logo)
 
+    # Parse Answer from Server
     @Slot(str, str)
     def parseAns(self, lastReq, ServerAns):
         #print ('--------LastReq: ', lastReq, ' Ans: ', ans)
@@ -234,22 +240,31 @@ class LoginWindow(QWidget):
                 pass
 
     def tcpError(self, err):
+        # React to connectionerror
         if err == 'ConnectionRefused' or err == 'ConnectionClosed':
+            # Show Error Mesasge to User
             self.messageLabel.setText("<font color=red>Server nicht erreichbar!</font>")
+            # Close Failed Connection
             self.tcp.abort()
+            # Disable Buttons
             self.loginBtn.setEnabled(False)
             self.conStat=False
+            # Start timer
             self.rconTimer.start(5000)
         print(err)
 
     def tryReconnect(self):
+        # Try to reach the Server
         self.rconTimer.stop()
         self.messageLabel.setText("<font color=red>Verbinung wird aufgebaut...</font>")
         self.tcp.con()
 
     def tcpConnected(self):
+        # TCP Connection was successful
+        # Stop timer
         self.rconTimer.stop()
         self.logoLabel.setPixmap(self.logo)
+        # Enable Login Funktions again
         self.messageLabel.setText('')
         self.loginBtn.setEnabled(True)
         self.conStat=True

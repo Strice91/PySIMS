@@ -14,7 +14,7 @@ class RegisterWindow(QDialog):
         self.parent = parent
         self.tcp = parent.tcp
 
-
+        # Connect the incoming TCP Signal with parseAns
         self.tcp.recvAns.connect(self.parseAns)
 
         # Set Title
@@ -76,7 +76,7 @@ class RegisterWindow(QDialog):
         self.userName    = self.usernameEdit.text() 
         self.password    = self.passwordEdit.text()
         self.passwordCon = self.passwordConEdit.text()
-        self.sques        = self.squesEdit.text()
+        self.sques       = self.squesEdit.text()
         self.sans        = self.sansEdit.text()
         
         if (self.password):

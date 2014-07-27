@@ -5,6 +5,9 @@ from PySide.QtGui import *
 from login_ui import LoginWindow
 
 class MainProgram(QApplication):
+    """ Starts PySIMS either with standart IP and
+        Port or with the parameters that were entered
+        by the user."""
     
     def __init__(self, parent=None):
         super(MainProgram, self).__init__(sys.argv)   
