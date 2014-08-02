@@ -19,7 +19,7 @@ class TcpClient(QTcpSocket):
             #self.ip = '129.187.223.104' # LKN Server
             #self.ip = 'localhost' # Local Host
             #self.ip = '10.180.15.89' # Other Host
-            self.ip = '192.168.2.107' # Other Host
+            self.ip = '192.168.2.114' # Other Host
         else:
             self.ip = ip
 
